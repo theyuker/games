@@ -1,0 +1,1272 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>פנדלים מ-11 מטר</title><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>פנדלים מ-11 מטר</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;800&display=swap">
+<style>
+/* Night stadium: LED scoreboard on top, the pitch fills the rest of the screen, one compact console per player */
+:root {
+  --bg: #08160f;
+  --pitch: #134a30;
+  --pitch-2: #0f3d27;
+  --chalk: #eef3ea;
+  --muted: #9db3a6;
+  --led: #ffcf3a;
+  --save: #ff5d5d;
+  --panel: #0f241a;
+  --line: #24493a;
+  --display: "Secular One", "Arial Hebrew", system-ui, sans-serif;
+  --body: "Assistant", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: radial-gradient(120% 70% at 50% 0%, #1b3a2b 0%, var(--bg) 60%);
+  background-color: var(--bg);
+  color: var(--chalk);
+  font-family: var(--body);
+  font-size: 15px;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-block: 8px;
+  box-sizing: border-box;
+}
+.wrap {
+  max-width: 1100px; height: 100%; margin: 0 auto;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
+}
+
+/* scoreboard: one LED cell per player plus the round */
+.board { display: flex; gap: 8px; align-items: stretch; direction: ltr; }
+.board > * { direction: rtl; }
+.binfo, .pcell { background: #050c08; border: 1px solid var(--line); border-radius: 10px; }
+.binfo { display: grid; place-content: center; text-align: center; padding: 4px 12px; min-width: 96px; }
+.binfo .mode { font-size: .72rem; color: var(--muted); letter-spacing: .04em; }
+.binfo .round { font-weight: 800; font-size: .9rem; color: var(--led); }
+.pcell {
+  flex: 1; min-width: 0; padding: 5px 10px; border-top: 3px solid var(--c);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px;
+}
+.pcell .pname { font-family: var(--display); font-size: 1.05rem; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcell .ptag { font-size: .72rem; font-weight: 800; color: var(--muted); }
+.pcell .ptag.k { color: var(--led); }
+.pcell .pgoals {
+  grid-row: span 2; font-family: "Courier New", monospace; font-weight: 700; font-size: 2rem; line-height: 1;
+  color: var(--led); text-shadow: 0 0 12px rgba(255, 207, 58, .5); font-variant-numeric: tabular-nums;
+}
+.pcell .dots { grid-column: 1 / -1; }
+.dots { display: flex; gap: 3px; flex-wrap: wrap; min-height: 9px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #3c5c4c; box-sizing: border-box; }
+.dot.g { background: var(--led); border-color: var(--led); }
+.dot.s { border-color: var(--save); position: relative; }
+.dot.s::after { content: ""; position: absolute; inset: 2.5px -2px; background: var(--save); transform: rotate(45deg); }
+
+/* field */
+.field-row { min-height: 0; display: grid; place-items: center; }
+.field {
+  position: relative; height: 100%; aspect-ratio: 3 / 2; max-width: 100%;
+  border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--pitch-2);
+}
+.field svg {
+  display: block; width: 100%; height: 100%;
+  transform-origin: 50% 60%;
+  transition: transform .45s ease-out, filter .25s;
+}
+.field.slowmo svg {
+  transform: scale(1.35); filter: saturate(.3) contrast(1.15) brightness(.92);
+  transition: transform 1.6s cubic-bezier(.3,.7,.3,1), filter 1s;
+}
+.vignette {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(0,0,0,.8) 100%);
+}
+.field.slowmo .vignette { opacity: 1; transition: opacity 1s; }
+#net.ripple { animation: ripple .7s ease-out; transform-origin: 300px 108px; transform-box: view-box; }
+@keyframes ripple { 0%{transform:scale(1)} 30%{transform:scale(1.04,1.08)} 100%{transform:scale(1)} }
+
+/* fans: arms show and bodies bounce when their side celebrates */
+#crowd .arms { opacity: 0; }
+#crowd[data-cheer~="P0"] .tP0 .arms, #crowd[data-cheer~="P1"] .tP1 .arms,
+#crowd[data-cheer~="P2"] .tP2 .arms, #crowd[data-cheer~="N"] .tN .arms { opacity: 1; }
+#crowd[data-cheer~="P0"] .tP0 .bod, #crowd[data-cheer~="P1"] .tP1 .bod,
+#crowd[data-cheer~="P2"] .tP2 .bod, #crowd[data-cheer~="N"] .tN .bod { animation: jump .3s ease-in-out infinite alternate; }
+@keyframes jump { to { transform: translateY(-3px); } }
+
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  font-family: var(--display); text-shadow: 0 4px 0 rgba(0,0,0,.5);
+}
+.count { font-size: clamp(4rem, 18vh, 9rem); color: var(--chalk); opacity: 0; }
+.count.pop { animation: pop .8s ease-out forwards; }
+@keyframes pop { 0%{opacity:0; transform:scale(2.2)} 20%{opacity:1; transform:scale(1)} 75%{opacity:1} 100%{opacity:0; transform:scale(.8)} }
+.banner {
+  font-size: clamp(2.4rem, 12vh, 5.5rem); text-align: center;
+  opacity: 0; transform: scale(.7); transition: opacity .25s, transform .35s cubic-bezier(.2,1.4,.4,1);
+}
+.banner.show { opacity: 1; transform: scale(1); }
+.banner.goal { color: var(--led); }
+.banner.save { color: var(--save); }
+.banner small { display: block; font-family: var(--body); font-size: 1rem; color: var(--chalk); font-weight: 600; text-shadow: 0 1px 3px #000; margin-top: 4px; }
+.roles {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%); pointer-events: none;
+  display: flex; gap: 14px; white-space: nowrap; direction: rtl; max-width: calc(100% - 16px); overflow: hidden;
+  background: rgba(5, 12, 8, .8); border: 1px solid var(--line); border-radius: 999px;
+  padding: 4px 14px; font-weight: 700; font-size: .95rem; transition: opacity .3s;
+}
+.roles .rest { color: var(--muted); font-weight: 600; }
+.roles.hide { opacity: 0; }
+.chip { display: inline-block; width: 13px; height: 13px; border-radius: 3px; margin-inline-end: 6px; vertical-align: -2px; }
+
+/* consoles */
+.consoles { direction: ltr; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 10px; }
+.console {
+  direction: rtl; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 10px;
+  padding: 8px 10px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 12px; min-width: 0;
+  transition: opacity .2s, background .2s;
+}
+.console.kicking { background: #1a3326; }
+.console.idle { opacity: .5; }
+.console header { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.console h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 1.1rem; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 9em; }
+.role { font-size: .8rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: #1d3b2d; }
+.role.kick { background: var(--led); color: #1a1405; }
+.keys { direction: ltr; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-width: 0; }
+.key {
+  font: inherit; color: var(--chalk); cursor: pointer;
+  background: #163226; border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 8px;
+  padding: 4px 2px; display: grid; justify-items: center; line-height: 1.15;
+}
+.key kbd { font-family: "Courier New", monospace; font-weight: 700; font-size: 1.2rem; }
+.key span { font-size: .75rem; color: var(--muted); }
+.key:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+.key:disabled { opacity: .45; cursor: default; }
+.cpu-face { font-size: .85rem; color: var(--muted); }
+.lock { grid-column: 1 / -1; font-weight: 700; font-size: .9rem; color: var(--muted); }
+.lock.done { color: var(--led); }
+
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; }
+.status { font-weight: 600; color: var(--muted); min-width: 0; }
+.status b { color: var(--chalk); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  font: inherit; font-weight: 700; cursor: pointer; color: var(--chalk);
+  background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 5px 12px;
+}
+.btn.primary { background: var(--led); color: #1a1405; border-color: var(--led); }
+.btn:hover { border-color: var(--muted); }
+.btn:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+
+/* setup and results */
+.modal {
+  position: fixed; inset: 0; z-index: 10; overflow: auto;
+  background: rgba(3, 8, 5, .86); display: grid; place-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+}
+.card {
+  width: min(560px, 100%); box-sizing: border-box; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 20px; display: grid; gap: 14px;
+}
+.card h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 1.9rem; color: var(--led); text-wrap: balance; }
+.card h3 { margin: 0; font-size: .8rem; font-weight: 800; letter-spacing: .05em; color: var(--muted); }
+.modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mode {
+  font: inherit; color: var(--chalk); cursor: pointer; text-align: start;
+  background: #122a1f; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 3px;
+}
+.mode b { font-size: 1rem; }
+.mode span { font-size: .78rem; color: var(--muted); line-height: 1.35; }
+.mode[aria-pressed="true"] { border-color: var(--led); background: #1d3b2d; }
+.mode:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+.names { display: grid; gap: 8px; }
+.nrow { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.nrow .sw { width: 18px; height: 18px; border-radius: 4px; }
+.nrow input {
+  font: inherit; font-size: 1rem; color: var(--chalk); background: #0a1a12; border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 10px; min-width: 0;
+}
+.nrow input:focus { outline: 2px solid var(--led); outline-offset: 1px; }
+.nrow .kh { direction: ltr; font-family: "Courier New", monospace; font-weight: 700; color: var(--muted); font-size: .9rem; white-space: nowrap; }
+.rules { font-size: .85rem; color: var(--muted); line-height: 1.5; margin: 0; }
+.card .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start; }
+.card .btn { padding: 8px 18px; font-size: 1rem; }
+.podium { display: grid; gap: 6px; }
+.place {
+  display: grid; grid-template-columns: 2.2em 14px minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
+  background: #0a1a12; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
+}
+.place .pos { font-family: var(--display); font-size: 1.4rem; color: var(--muted); }
+.place:first-child { border-color: var(--led); }
+.place:first-child .pos { color: var(--led); }
+.place .nm { font-family: var(--display); font-size: 1.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.place .st { font-size: .8rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.place .gl { font-family: "Courier New", monospace; font-weight: 700; font-size: 1.4rem; color: var(--led); font-variant-numeric: tabular-nums; }
+
+/* phone controllers */
+.ctls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ctl {
+  font: inherit; color: var(--chalk); cursor: pointer; text-align: start;
+  background: #122a1f; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 3px;
+}
+.ctl b { font-size: 1rem; }
+.ctl span { font-size: .78rem; color: var(--muted); line-height: 1.35; }
+.ctl[aria-pressed="true"] { border-color: var(--led); background: #1d3b2d; }
+.join { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center;
+  background: #0a1a12; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.join .qr { background: #fff; border-radius: 8px; padding: 6px; line-height: 0; }
+.join .qr svg { width: 132px; height: 132px; display: block; }
+.join .code { font-family: "Courier New", monospace; font-weight: 700; font-size: 2rem; color: var(--led); letter-spacing: .15em; direction: ltr; }
+.join .how { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+.join .how a { color: var(--chalk); word-break: break-all; }
+.join .net { font-size: .8rem; font-weight: 700; }
+.join .net.ok { color: #6be3a4; } .join .net.bad { color: var(--save); }
+.nrow .kh.on { color: #6be3a4; }
+.btn:disabled { opacity: .45; cursor: default; }
+@media (max-width: 640px) {
+  .consoles { grid-template-columns: 1fr; gap: 6px; }
+  .modes { grid-template-columns: 1fr; }
+  .binfo { min-width: 0; padding: 4px 8px; }
+  .pcell .pgoals { font-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .field svg, .banner, .vignette { transition-duration: .01s !important; }
+  #net.ripple, #crowd .bod { animation: none !important; }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<div class="wrap" dir="rtl">
+  <section class="board" id="board" aria-label="לוח תוצאות"></section>
+
+  <div class="field-row">
+    <div class="field" id="field">
+      <svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="מגרש: שער, שוער, בועט, כדור וקהל">
+        <defs>
+          <pattern id="mesh" width="8" height="8" patternUnits="userSpaceOnUse">
+            <path d="M0 0 L8 8 M8 0 L0 8" stroke="#dfe8e0" stroke-opacity=".3" stroke-width=".8" fill="none"/>
+          </pattern>
+          <radialGradient id="ballGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#c3ccc6"/>
+          </radialGradient>
+          <linearGradient id="stand" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#050b08"/>
+            <stop offset="1" stop-color="#16291f"/>
+          </linearGradient>
+        </defs>
+        <!-- stands with tiers -->
+        <rect x="0" y="0" width="600" height="84" fill="url(#stand)"/>
+        <g fill="#000" opacity=".25">
+          <rect x="0" y="17" width="600" height="2"/><rect x="0" y="28" width="600" height="2"/>
+          <rect x="0" y="40" width="600" height="2"/><rect x="0" y="53" width="600" height="2"/>
+          <rect x="0" y="67" width="600" height="2"/>
+        </g>
+        <g id="crowd"></g>
+        <!-- ad boards -->
+        <rect x="0" y="72" width="600" height="12" fill="#050c08"/>
+        <g font-family="Courier New, monospace" font-size="9" font-weight="700" fill="#ffcf3a" fill-opacity=".8">
+          <text x="20" y="81">PENALTY · 11M · PENALTY · 11M</text>
+          <text x="330" y="81">PENALTY · 11M · PENALTY · 11M</text>
+        </g>
+        <!-- pitch bands, getting taller towards the camera -->
+        <rect x="0" y="84" width="600" height="316" fill="#134a30"/>
+        <rect x="0" y="100" width="600" height="20" fill="#0f3d27"/>
+        <rect x="0" y="143" width="600" height="27" fill="#0f3d27"/>
+        <rect x="0" y="200" width="600" height="36" fill="#0f3d27"/>
+        <rect x="0" y="276" width="600" height="50" fill="#0f3d27"/>
+        <!-- markings -->
+        <g stroke="#eef3ea" stroke-opacity=".75" stroke-width="2.5" fill="none">
+          <path d="M0 188 L600 188"/>
+          <path d="M70 188 L50 222 L550 222 L530 188"/>
+          <path d="M0 346 L600 346"/>
+          <path d="M215 346 Q300 392 385 346"/>
+        </g>
+        <ellipse cx="300" cy="291" rx="5" ry="2.5" fill="#eef3ea"/>
+        <!-- net -->
+        <g id="net">
+          <path d="M180 108 L420 108 L404 98 L196 98 Z" fill="url(#mesh)"/>
+          <path d="M180 108 L196 98 L196 178 L180 188 Z M420 108 L404 98 L404 178 L420 188 Z" fill="#0b1f15" opacity=".5"/>
+          <path d="M180 108 L196 98 L196 178 L180 188 Z M420 108 L404 98 L404 178 L420 188 Z" fill="url(#mesh)"/>
+          <rect x="196" y="98" width="208" height="80" fill="#0b1f15" opacity=".45"/>
+          <rect x="196" y="98" width="208" height="80" fill="url(#mesh)"/>
+        </g>
+        <path d="M180 188 L180 108 L420 108 L420 188" stroke="#f7faf6" stroke-width="5" stroke-linejoin="round" fill="none"/>
+
+        <!-- goalie, facing the camera: feet on the goal line, hips at 300,165 -->
+        <g id="goalie">
+          <ellipse cx="300" cy="188" rx="12" ry="3" fill="#000" opacity=".3"/>
+          <path d="M294 166 L299 166 L298.7 176 L298.4 184.5 L294.4 184.5 L293.6 176 Z" fill="#1d1d1d"/>
+          <path d="M301 166 L306 166 L306.4 176 L305.6 184.5 L301.6 184.5 L301.3 176 Z" fill="#1d1d1d"/>
+          <path d="M293 184 L299 184 L299.6 188 L291.5 188 Z" fill="#0a0a0a"/>
+          <path d="M301 184 L307 184 L308.5 188 L300.4 188 Z" fill="#0a0a0a"/>
+          <path d="M290.5 157 L309.5 157 L310.5 170 L302 170 L300 165.5 L298 170 L289.5 170 Z" fill="#1b1b1b"/>
+          <path d="M290 137 Q300 134.5 310 137 L309 158 L291 158 Z" class="gshirt"/>
+          <path d="M291 145 L309 145" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
+          <text x="300" y="155" text-anchor="middle" font-family="Secular One, sans-serif" font-size="9" fill="#000" fill-opacity=".45">1</text>
+          <rect x="297" y="129" width="6" height="6" fill="#d9a77e"/>
+          <path d="M296 134.5 L300 138.5 L304 134.5" stroke="#000" stroke-opacity=".3" stroke-width="1.2" fill="none"/>
+          <ellipse cx="293.6" cy="123.5" rx="1.3" ry="2" fill="#d9a77e"/>
+          <ellipse cx="306.4" cy="123.5" rx="1.3" ry="2" fill="#d9a77e"/>
+          <ellipse cx="300" cy="123" rx="6.5" ry="7.5" fill="#e3ad84"/>
+          <path d="M293.5 121 Q293.6 113 300 113 Q306.4 113 306.5 121 Q303 117.2 300 117.6 Q297 117.2 293.5 121Z" fill="#2b1d12"/>
+          <circle cx="297.6" cy="123" r=".8" fill="#2b1d12"/>
+          <circle cx="302.4" cy="123" r=".8" fill="#2b1d12"/>
+          <path d="M298 127.3 Q300 128.3 302 127.3" stroke="#8a4f35" stroke-width=".8" fill="none"/>
+          <g id="gArmL">
+            <path d="M289 139 L293.5 139 L293 156 L289.5 156 Z" class="gshirt"/>
+            <ellipse cx="291.2" cy="159.8" rx="3.6" ry="4.6" fill="#f4f4f0" stroke="#ffcf3a" stroke-width="1"/>
+          </g>
+          <g id="gArmR">
+            <path d="M306.5 139 L311 139 L310.5 156 L307 156 Z" class="gshirt"/>
+            <ellipse cx="308.8" cy="159.8" rx="3.6" ry="4.6" fill="#f4f4f0" stroke="#ffcf3a" stroke-width="1"/>
+          </g>
+        </g>
+
+        <!-- ball shadow, kicker (seen from behind, feet at 0,0), ball -->
+        <ellipse id="ballShadow" cx="300" cy="291" rx="10" ry="3" fill="#000" opacity=".35"/>
+        <g id="kicker">
+          <ellipse cx="0" cy="1" rx="18" ry="4" fill="#000" opacity=".3"/>
+          <g id="kArmL">
+            <path d="M-3.8 0 L3.8 0 L3.3 10 L-3.3 10 Z" class="kshirt"/>
+            <path d="M-3 10 L3 10 L2.4 25 L-2.4 25 Z" fill="#d9a77e"/>
+            <circle cx="0" cy="27" r="3" fill="#d9a77e"/>
+          </g>
+          <g id="kArmR">
+            <path d="M-3.8 0 L3.8 0 L3.3 10 L-3.3 10 Z" class="kshirt"/>
+            <path d="M-3 10 L3 10 L2.4 25 L-2.4 25 Z" fill="#d9a77e"/>
+            <circle cx="0" cy="27" r="3" fill="#d9a77e"/>
+          </g>
+          <g id="kThighL"><path d="M-4.6 0 L4.6 0 L3.7 17.5 L-3.7 17.5 Z" fill="#d9a77e"/></g>
+          <g id="kShinL">
+            <path d="M-3.7 0 L3.7 0 L3.4 4 L-3.4 4 Z" fill="#d9a77e"/>
+            <path d="M-3.5 4 L3.5 4 L3 14 L-3 14 Z" fill="#eef3ea"/>
+            <path d="M-3.6 14 L3.6 14 L4.6 18 L-4.6 18 Z" fill="#111"/>
+          </g>
+          <g id="kThighR"><path d="M-4.6 0 L4.6 0 L3.7 17.5 L-3.7 17.5 Z" fill="#d9a77e"/></g>
+          <g id="kShinR">
+            <path d="M-3.7 0 L3.7 0 L3.4 4 L-3.4 4 Z" fill="#d9a77e"/>
+            <path d="M-3.5 4 L3.5 4 L3 14 L-3 14 Z" fill="#eef3ea"/>
+            <path d="M-3.6 14 L3.6 14 L4.6 18 L-4.6 18 Z" fill="#111"/>
+          </g>
+          <g id="kUpper">
+            <path d="M-14 -46 L14 -46 L15.5 -31 L1 -31 L0 -36 L-1 -31 L-15.5 -31 Z" fill="#1b1b1b"/>
+            <path d="M-16.5 -77 Q0 -81 16.5 -77 L14 -45 L-14 -45 Z" class="kshirt"/>
+            <path d="M-13 -48 L13 -48" stroke="#000" stroke-opacity=".2" stroke-width="2"/>
+            <text x="0" y="-56" text-anchor="middle" font-family="Secular One, sans-serif" font-size="14" fill="#08160f" fill-opacity=".65">11</text>
+            <rect x="-3.5" y="-84" width="7" height="7" fill="#d9a77e"/>
+            <ellipse cx="-8" cy="-88" rx="1.8" ry="2.8" fill="#d9a77e"/>
+            <ellipse cx="8" cy="-88" rx="1.8" ry="2.8" fill="#d9a77e"/>
+            <ellipse cx="0" cy="-89" rx="8" ry="9" fill="#2b1d12"/>
+          </g>
+        </g>
+        <g id="ball">
+          <circle cx="0" cy="0" r="8" fill="url(#ballGrad)" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M0 -4.5 l4 2.8 -1.5 4.6 -5 0 -1.5 -4.6z" fill="#222"/>
+        </g>
+      </svg>
+      <div class="vignette"></div>
+      <div class="roles" id="roles"></div>
+      <div class="overlay"><div class="count" id="count"></div></div>
+      <div class="overlay"><div class="banner" id="banner"></div></div>
+    </div>
+  </div>
+
+  <div class="consoles" id="consoles"></div>
+
+  <div class="footer">
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="actions">
+      <button class="btn primary" id="next" hidden>לבעיטה הבאה (רווח)</button>
+      <button class="btn" id="sound">צליל: פועל (M)</button>
+      <button class="btn" id="restart">משחק חוזר</button>
+      <button class="btn" id="setupBtn">הגדרות ושחקנים</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="setup">
+  <div class="card" role="dialog" aria-labelledby="setupTitle">
+    <h1 id="setupTitle">פנדלים מ-11 מטר</h1>
+    <h3>איך משחקים?</h3>
+    <div class="modes" id="modes">
+      <button class="mode" data-mode="cpu" aria-pressed="false"><b>מול המחשב</b><span>שחקן אחד מול המחשב, 5 בעיטות לכל צד</span></button>
+      <button class="mode" data-mode="duo" aria-pressed="true"><b>שני שחקנים</b><span>דו־קרב פנדלים, 5 בעיטות לכל צד</span></button>
+      <button class="mode" data-mode="league" aria-pressed="false"><b>ליגה של שלושה</b><span>כל זוג נפגש 5 פעמים, בסבב מתחלף</span></button>
+    </div>
+    <h3>איך שולטים?</h3>
+    <div class="ctls" id="ctls">
+      <button class="ctl" data-ctl="keys" aria-pressed="true"><b>⌨️ מקלדת</b><span>כולם ליד מחשב אחד, כל שחקן עם המקשים שלו</span></button>
+      <button class="ctl" data-ctl="phones" aria-pressed="false"><b>📱 טלפונים</b><span>כל שחקן בוחר בסתר בטלפון שלו, המסך הזה מציג את המגרש</span></button>
+    </div>
+    <div class="join" id="joinBox" hidden>
+      <div class="qr" id="qr"></div>
+      <div>
+        <div class="how">סורקים עם המצלמה של הטלפון, או נכנסים לקישור ומקלידים את הקוד:</div>
+        <div class="code" id="roomCode">····</div>
+        <div class="how"><a id="joinLink" target="_blank" rel="noopener"></a></div>
+        <div class="net" id="netStatus">מתחבר…</div>
+      </div>
+    </div>
+    <h3>שמות השחקנים</h3>
+    <div class="names" id="names"></div>
+    <p class="rules" id="rules"></p>
+    <div class="row"><button class="btn primary" id="startBtn">התחילו לשחק</button></div>
+  </div>
+</div>
+
+<div class="modal" id="results" hidden>
+  <div class="card" role="dialog" aria-labelledby="resTitle">
+    <h1 id="resTitle">סוף המשחק</h1>
+    <div class="podium" id="podium"></div>
+    <div class="row">
+      <button class="btn primary" id="againBtn">משחק חוזר (רווח)</button>
+      <button class="btn" id="changeBtn">שינוי שחקנים</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const DIRS = ['left', 'mid', 'right'];
+  const DIR_HE = { left: 'שמאל', mid: 'אמצע', right: 'ימין' };
+  // one key set per keyboard area: left hand, right hand, arrow keys
+  const KEYSETS = [['KeyA', 'KeyS', 'KeyD'], ['KeyJ', 'KeyK', 'KeyL'], ['ArrowLeft', 'ArrowDown', 'ArrowRight']];
+  const KEYLABELS = [['A', 'S', 'D'], ['J', 'K', 'L'], ['←', '↓', '→']];
+  const COLORS = ['#4fd1c5', '#ff8a5b', '#c792ff'];
+  const DEFAULT_NAMES = ['שחקן 1', 'שחקן 2', 'שחקן 3'];
+  const MODE_HE = { cpu: 'מול המחשב', duo: 'דו־קרב', league: 'ליגה' };
+  const RULES = {
+    cpu: 'אתם מול המחשב. כל צד בועט 5 פעמים לסירוגין. בשוויון ממשיכים לבעיטה אחת לכל צד עד הכרעה. אפשר לבחור בכל אחד משלושת סטים של המקשים.',
+    duo: 'כל צד בועט 5 פעמים לסירוגין. המשחק נגמר מוקדם אם צד אחד כבר לא יכול להשיג את השני. בשוויון ממשיכים לבעיטה אחת לכל צד עד הכרעה.',
+    league: 'בכל סבב: 1 מול 2, 2 מול 3, 3 מול 1, וכל אחד בועט פעם אחת על כל יריב. אחרי 5 סבבים מדרגים לפי מספר הגולים. שוויון במקום מוכרע בהארכה בין השחקנים שבשוויון.'
+  };
+  // league round: everyone kicks once at each rival, and no one sits out twice in a row
+  const LEAGUE_ROUND = [[0, 1], [1, 2], [2, 0], [1, 0], [2, 1], [0, 2]];
+  const LEAGUE_KICKS = 30;
+
+  // pitch geometry (SVG units): spot is 11 m out, goal line at y=188
+  const SPOT = { x: 300, y: 285 };
+  const GOAL_Y = 186;
+  const TARGET = { left: { x: 216, y: 150 }, mid: { x: 300, y: 132 }, right: { x: 384, y: 150 } };
+  const DIVE = { left: { dx: -50, dy: -6, a: -78 }, mid: { dx: 0, dy: -16, a: 0 }, right: { dx: 50, dy: -6, a: 78 } };
+  const BOUNCE = { left: { x: 140, y: 215 }, mid: { x: 335, y: 245 }, right: { x: 460, y: 215 } };
+  const KICK_START = { x: 185, y: 392, s: 1.15 }, KICK_END = { x: 272, y: 302, s: 1 };
+
+  const $ = id => document.getElementById(id);
+  const field = $('field'), goalie = $('goalie'), ball = $('ball'), shadow = $('ballShadow'), net = $('net');
+  const kicker = $('kicker'), crowd = $('crowd'), banner = $('banner'), count = $('count');
+  const K = { thL: $('kThighL'), shL: $('kShinL'), thR: $('kThighR'), shR: $('kShinR'), arL: $('kArmL'), arR: $('kArmR'), up: $('kUpper') };
+  const gArmL = $('gArmL'), gArmR = $('gArmR');
+
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = t => Math.max(0, Math.min(1, t));
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const rad = d => d * Math.PI / 180;
+  const f2 = n => n.toFixed(2);
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ---------- crowd: rows of fans with heads, shoulders, arms, in the players' colours ----------
+  function buildCrowd(colors) {
+    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const pick = a => a[Math.floor(rnd() * a.length)];
+    const skin = ['#f1c7a3', '#e3ad84', '#c68b5e', '#a8754f', '#6e4a32'];
+    const hair = ['#2b1d12', '#4a3020', '#111', '#7a5a3a', '#c9a36a', '#555'];
+    const plain = ['#eef3ea', '#2f5d48', '#3a3f5c', '#8a2d3b', '#cfcfcf', '#1f2a36'];
+    const rows = [{ y: 16, s: .5 }, { y: 27, s: .6 }, { y: 39, s: .7 }, { y: 52, s: .8 }, { y: 66, s: .92 }, { y: 80, s: 1.05 }];
+    const n = colors.length;
+    let out = '';
+    for (const r of rows) {
+      for (let x = 3 + rnd() * 4; x < 600; x += (9.5 + rnd() * 2.5) * r.s) {
+        // each team's fans lean towards its own section of the stand
+        const home = Math.min(n - 1, Math.floor(x / (600 / n)));
+        const q = rnd();
+        const team = q < .55 ? home : q < .8 ? Math.floor(rnd() * n) : -1;
+        const shirt = team < 0 ? pick(plain) : colors[team];
+        const cls = team < 0 ? 'tN' : 'tP' + team;
+        const sk = pick(skin), hr = pick(hair), sc = r.s * (.92 + rnd() * .16);
+        const scarf = team >= 0 && rnd() < .35 ? '<path d="M-4.5 -6.3 Q0 -4.5 4.5 -6.3" stroke="' + colors[team] + '" stroke-width="1.6" fill="none" stroke-opacity=".9"/>' : '';
+        out += '<g class="fan ' + cls + '" transform="translate(' + f2(x) + ' ' + f2(r.y + rnd() * 1.5) + ') scale(' + f2(sc) + ')">' +
+          '<g class="bod" style="animation-delay:-' + (rnd() * .3).toFixed(2) + 's">' +
+          '<path class="arms" d="M-4.2 -4 L-7.8 -15.5 M4.2 -4 L7.8 -15.5" stroke="' + sk + '" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+          '<path d="M-5.6 3 L-5.6 -2.6 Q-5.6 -7.2 0 -7.2 Q5.6 -7.2 5.6 -2.6 L5.6 3 Z" fill="' + shirt + '"/>' + scarf +
+          '<rect x="-1.5" y="-8.6" width="3" height="2" fill="' + sk + '"/>' +
+          '<circle cy="-11.2" r="3.3" fill="' + sk + '"/>' +
+          (rnd() < .85 ? '<path d="M-3.4 -11.4 Q-3.3 -14.8 0 -14.8 Q3.3 -14.8 3.4 -11.4 Q0 -13 -3.4 -11.4Z" fill="' + hr + '"/>' : '') +
+          '</g></g>';
+      }
+    }
+    crowd.innerHTML = out;
+  }
+  let cheerTimer = 0;
+  function cheer(groups) {
+    clearTimeout(cheerTimer);
+    crowd.dataset.cheer = groups;
+    cheerTimer = setTimeout(() => { crowd.dataset.cheer = ''; }, 4200);
+  }
+
+  // ---------- sound (all synthesized with Web Audio) ----------
+  let AC = null, master = null, noiseBuf = null, bedGain = null, droneStop = null;
+  let muted = false;
+  try { muted = localStorage.getItem('penalty-muted') === '1'; } catch (e) {}
+
+  function audio() {
+    if (!AC) {
+      try {
+        AC = new (window.AudioContext || window.webkitAudioContext)();
+        master = AC.createGain(); master.gain.value = muted ? 0 : .9; master.connect(AC.destination);
+        noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        const n = noise(), bp = AC.createBiquadFilter(), lp = AC.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = 500; bp.Q.value = .6;
+        lp.type = 'lowpass'; lp.frequency.value = 1400;
+        bedGain = AC.createGain(); bedGain.gain.value = .05;
+        n.connect(bp); bp.connect(lp); lp.connect(bedGain); bedGain.connect(master); n.start();
+      } catch (e) { AC = null; }
+    }
+    if (AC && AC.state === 'suspended') AC.resume();
+    return AC;
+  }
+  function noise() { const s = AC.createBufferSource(); s.buffer = noiseBuf; s.loop = true; return s; }
+  function env(g, t, a, hold, rel, peak) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + a);
+    g.gain.setValueAtTime(peak, t + a + hold);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + hold + rel);
+  }
+  function bed(level, tc) { if (AC) bedGain.gain.setTargetAtTime(level, AC.currentTime, tc || .4); }
+
+  function beep(freq, dur, vol) {
+    if (!audio()) return;
+    const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    env(g, t, .01, dur * .6, dur * .4, vol);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
+  }
+  function whistle() {
+    if (!audio()) return;
+    const t = AC.currentTime, o = AC.createOscillator(), lfo = AC.createOscillator(), lg = AC.createGain(), g = AC.createGain();
+    o.frequency.value = 2900; lfo.frequency.value = 32; lg.gain.value = 140;
+    lfo.connect(lg); lg.connect(o.frequency);
+    env(g, t, .02, .45, .12, .12);
+    o.connect(g); g.connect(master); o.start(t); lfo.start(t); o.stop(t + .7); lfo.stop(t + .7);
+  }
+  function thud(vol) {
+    if (!audio()) return;
+    const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(45, t + .15);
+    env(g, t, .005, .02, .25, vol);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + .35);
+    const n = noise(), f = AC.createBiquadFilter(), ng = AC.createGain();
+    f.type = 'lowpass'; f.frequency.value = 2200;
+    env(ng, t, .003, .01, .06, vol * .5);
+    n.connect(f); f.connect(ng); ng.connect(master); n.start(t); n.stop(t + .12);
+  }
+  function heartbeat(at) {
+    if (!audio()) return;
+    [0, .24].forEach((off, i) => {
+      const t = AC.currentTime + at + off, o = AC.createOscillator(), g = AC.createGain();
+      o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(40, t + .12);
+      env(g, t, .01, .02, .14, i ? .35 : .5);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + .25);
+    });
+  }
+  // low rising tone under the slow motion
+  function drone() {
+    if (!audio()) return () => {};
+    const t = AC.currentTime, o1 = AC.createOscillator(), o2 = AC.createOscillator(), g = AC.createGain();
+    o1.type = 'sawtooth'; o2.type = 'sine';
+    o1.frequency.setValueAtTime(55, t); o1.frequency.linearRampToValueAtTime(82, t + 3);
+    o2.frequency.setValueAtTime(110, t); o2.frequency.linearRampToValueAtTime(165, t + 3);
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 400;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + 1.2);
+    o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(master); o1.start(t); o2.start(t);
+    return () => {
+      const n = AC.currentTime;
+      g.gain.cancelScheduledValues(n); g.gain.setTargetAtTime(0.0001, n, .05);
+      o1.stop(n + .4); o2.stop(n + .4);
+    };
+  }
+  function swish() {
+    if (!audio()) return;
+    const t = AC.currentTime, n = noise(), f = AC.createBiquadFilter(), g = AC.createGain();
+    f.type = 'highpass'; f.frequency.value = 2500;
+    env(g, t, .02, .05, .3, .18);
+    n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t + .45);
+  }
+  // a crowd voice: many detuned saws through a moving vowel formant plus a wash of noise
+  function crowdVoice(o) {
+    if (!audio()) return;
+    const t = AC.currentTime + (o.delay || 0), end = t + o.a + o.hold + o.rel;
+    const form = AC.createBiquadFilter(); form.type = 'bandpass'; form.Q.value = 2.5;
+    form.frequency.setValueAtTime(o.f1, t); form.frequency.linearRampToValueAtTime(o.f2, end);
+    const g = AC.createGain(); env(g, t, o.a, o.hold, o.rel, o.vol);
+    form.connect(g); g.connect(master);
+    for (let i = 0; i < 20; i++) {
+      const osc = AC.createOscillator(); osc.type = 'sawtooth';
+      const f = o.pitch * (.7 + Math.random() * .7);
+      osc.frequency.setValueAtTime(f, t);
+      osc.frequency.exponentialRampToValueAtTime(f * o.glide, end);
+      const vg = AC.createGain(); vg.gain.value = .05;
+      osc.connect(vg); vg.connect(form);
+      osc.start(t + Math.random() * .15); osc.stop(end + .05);
+    }
+    const n = noise(), nf = AC.createBiquadFilter(), ng = AC.createGain();
+    nf.type = 'bandpass'; nf.frequency.value = o.noiseF; nf.Q.value = .5;
+    env(ng, t, o.a, o.hold, o.rel, o.vol * o.noiseAmt);
+    n.connect(nf); nf.connect(ng); ng.connect(master); n.start(t); n.stop(end + .05);
+  }
+  function applause(delay, dur, density, vol) {
+    if (!audio()) return;
+    const t0 = AC.currentTime + delay, total = Math.floor(dur * density);
+    const hp = AC.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 2200; hp.Q.value = .7;
+    hp.connect(master);
+    for (let i = 0; i < total; i++) {
+      const t = t0 + Math.random() * dur, fade = 1 - (t - t0) / dur;
+      const s = AC.createBufferSource(); s.buffer = noiseBuf;
+      const g = AC.createGain(); env(g, t, .002, .005, .05, Math.max(.001, vol * (.4 + Math.random() * .6) * fade));
+      s.connect(g); g.connect(hp); s.start(t, Math.random() * 1.5); s.stop(t + .08);
+    }
+  }
+  function roar() {
+    crowdVoice({ pitch: 280, glide: 1.12, f1: 850, f2: 1100, a: .25, hold: 1.8, rel: 1.8, vol: .9, noiseF: 1100, noiseAmt: .7 });
+    applause(.6, 3, 70, .35);
+    bed(.09); setTimeout(() => bed(.05), 4000);
+  }
+  function groan() {
+    crowdVoice({ pitch: 230, glide: .68, f1: 700, f2: 330, a: .35, hold: .7, rel: 1.7, vol: .9, noiseF: 600, noiseAmt: .5 });
+    applause(1.8, 1.6, 25, .2);
+    bed(.05, 1);
+  }
+  function setMuted(m) {
+    muted = m;
+    try { localStorage.setItem('penalty-muted', m ? '1' : '0'); } catch (e) {}
+    if (AC) master.gain.setTargetAtTime(m ? 0 : .9, AC.currentTime, .05);
+    $('sound').textContent = 'צליל: ' + (m ? 'כבוי' : 'פועל') + ' (M)';
+  }
+
+  // ---------- ball ----------
+  function setBall(x, y, sc, sx, sy, ss) {
+    ball.setAttribute('transform', 'translate(' + f2(x) + ' ' + f2(y) + ') scale(' + sc.toFixed(3) + ')');
+    shadow.setAttribute('cx', f2(sx)); shadow.setAttribute('cy', f2(sy));
+    shadow.setAttribute('rx', f2(10 * ss)); shadow.setAttribute('ry', f2(3 * ss));
+  }
+  function ballFlight(u, t) {
+    const sx = lerp(SPOT.x, t.x, u), sy = lerp(SPOT.y + 6, GOAL_Y, u);
+    const sc = 1 - .5 * u;
+    const h = (GOAL_Y - t.y - 3) * u + 22 * Math.sin(Math.PI * u);
+    setBall(sx, sy - 6 * sc - h, sc, sx, sy, sc * (1 - .3 * Math.sin(Math.PI * u)));
+  }
+
+  // ---------- goalie: whole-body pose + arms (0 = ready stance, 1 = stretched overhead) ----------
+  function setGoalie(p) {
+    goalie.setAttribute('transform', 'translate(' + f2(p.dx) + ' ' + f2(p.dy) + ') rotate(' + f2(p.a) + ' 300 165)');
+    const arm = lerp(38, 165, p.arm);
+    gArmL.setAttribute('transform', 'rotate(' + f2(arm) + ' 291.2 139)');
+    gArmR.setAttribute('transform', 'rotate(' + f2(-arm) + ' 308.8 139)');
+  }
+  const GREST = { dx: 0, dy: 0, a: 0, arm: 0 };
+  const mix = (a, b, t) => { const o = {}; for (const k in a) o[k] = lerp(a[k], b[k], t); return o; };
+  function goalieSway(t) { const w = Math.sin(t / 210); return { dx: w * 6, dy: -Math.abs(Math.cos(t / 210)) * 2.2, a: w * 3, arm: .08 + .06 * Math.abs(w) }; }
+
+  // ---------- kicker: a simple rig seen from behind ----------
+  // leg angles are in the running plane (+ forward); from behind that shows as foreshortening,
+  // so each segment is scaled vertically by the cosine of its angle; a shin bent far back flips upward.
+  function seg(el, x, y, lat, ang) {
+    let c = Math.cos(rad(ang)); if (Math.abs(c) < .06) c = c < 0 ? -.06 : .06;
+    el.setAttribute('transform', 'translate(' + f2(x) + ' ' + f2(y) + ') rotate(' + f2(lat) + ') scale(1 ' + c.toFixed(3) + ')');
+    return c;
+  }
+  function leg(th, sh, hx, hy, lat, ang, bend) {
+    const c = seg(th, hx, hy, lat, ang);
+    const kx = hx - Math.sin(rad(lat)) * 17.5 * c, ky = hy + Math.cos(rad(lat)) * 17.5 * c;
+    seg(sh, kx, ky, lat, ang - bend);
+  }
+  function setKicker(x, y, sc, p) {
+    kicker.setAttribute('transform', 'translate(' + f2(x) + ' ' + f2(y - p.bob) + ') scale(' + sc.toFixed(3) + ')');
+    K.up.setAttribute('transform', 'rotate(' + f2(p.lean) + ' 0 -34)');
+    leg(K.thL, K.shL, -6.5, -34, p.lL, p.aL, p.bL);
+    leg(K.thR, K.shR, 6.5, -34, p.lR, p.aR, p.bR);
+    const lean = rad(p.lean);
+    const sxL = -16 * Math.cos(lean) + 40 * Math.sin(lean), syL = -34 - 40 * Math.cos(lean) - 16 * Math.sin(lean);
+    const sxR = 16 * Math.cos(lean) + 40 * Math.sin(lean), syR = -34 - 40 * Math.cos(lean) + 16 * Math.sin(lean);
+    seg(K.arL, sxL, syL, p.armLatL, p.armL);
+    seg(K.arR, sxR, syR, p.armLatR, p.armR);
+  }
+  const STAND = { lL: 3, aL: 0, bL: 6, lR: -3, aR: 0, bR: 6, armL: 0, armR: 0, armLatL: 9, armLatR: -9, lean: 0, bob: 0 };
+  const BACKSWING = { lL: 4, aL: 8, bL: 22, lR: -6, aR: -42, bR: 118, armL: 15, armR: -30, armLatL: 62, armLatR: -24, lean: -5, bob: 1 };
+  const STRIKE = { lL: 4, aL: 10, bL: 18, lR: -44, aR: 42, bR: 16, armL: 10, armR: 25, armLatL: 78, armLatR: -34, lean: -9, bob: 3 };
+  function runPose(phase) {
+    const sL = Math.sin(phase), sR = Math.sin(phase + Math.PI);
+    return {
+      lL: 3, aL: 32 * sL, bL: 15 + 95 * Math.max(0, -Math.sin(phase - .5)),
+      lR: -3, aR: 32 * sR, bR: 15 + 95 * Math.max(0, -Math.sin(phase + Math.PI - .5)),
+      armL: -38 * sL, armR: -38 * sR, armLatL: 12, armLatR: -12, lean: Math.sin(phase) * 1.5,
+      bob: Math.abs(Math.cos(phase)) * 3
+    };
+  }
+
+
+  function paintShirts() {
+    const k = s.players[s.cur[0]].color, g = s.players[s.cur[1]].color;
+    document.querySelectorAll('.kshirt').forEach(e => e.setAttribute('fill', k));
+    document.querySelectorAll('.gshirt').forEach(e => e.setAttribute('fill', g));
+  }
+  function resetScene() {
+    ballFlight(0, TARGET.mid);
+    setGoalie(GREST);
+    setKicker(KICK_START.x, KICK_START.y, KICK_START.s, STAND);
+    field.classList.remove('slowmo');
+    net.classList.remove('ripple');
+    clearTimeout(cheerTimer); crowd.dataset.cheer = '';
+    banner.className = 'banner'; count.className = 'count';
+    if (droneStop) { droneStop(); droneStop = null; }
+    paintShirts();
+  }
+
+  // ---------- game state ----------
+  let s = null, animTok = 0;
+
+  function newGame(mode, names) {
+    animTok++;
+    let players;
+    if (mode === 'cpu') players = [{ name: names[0], color: COLORS[0], keyset: 0 }, { name: 'המחשב', color: COLORS[1], cpu: true }];
+    else if (mode === 'league') players = [0, 1, 2].map(i => ({ name: names[i], color: COLORS[i], keyset: i }));
+    else players = [0, 1].map(i => ({ name: names[i], color: COLORS[i], keyset: i }));
+    s = {
+      mode, players,
+      stats: players.map(() => ({ goals: 0, saves: 0, kicks: 0, tb: 0, hist: [] })),
+      done: 0, cur: null, upcoming: null, pick: { k: null, g: null }, phase: 'choose',
+      inTB: false, tbQueue: [], notice: ''
+    };
+    s.cur = nextKick();
+    setupScene();
+    startChoose();
+  }
+  function setupScene() {
+    buildCrowd(s.players.map(p => p.color));
+    buildConsoles();
+    $('results').hidden = true;
+    resetScene();
+  }
+
+  // whose turn next; null when the game is decided
+  function nextKick() {
+    if (s.mode === 'league') {
+      if (s.done < LEAGUE_KICKS) return LEAGUE_ROUND[s.done % LEAGUE_ROUND.length];
+      if (!s.tbQueue.length) {
+        const groups = tiedGroups();
+        if (!groups.length) return null;
+        s.inTB = true;
+        s.notice = 'הארכה! ' + groups.map(g => g.map(i => esc(s.players[i].name)).join(' ו-')).join(', ') + ' בשוויון.';
+        for (const g of groups) g.forEach((p, i) => s.tbQueue.push([p, g[(i + 1) % g.length]]));
+      }
+      return s.tbQueue.shift();
+    }
+    if (duoWinner() !== null) return null;
+    return s.done % 2 === 0 ? [0, 1] : [1, 0];
+  }
+  // shootout rules: 5 kicks each, stop early when one side can't catch up, then sudden death in pairs
+  function duoWinner() {
+    const a = s.stats[0], b = s.stats[1];
+    if (a.kicks <= 5 && b.kicks <= 5) {
+      if (a.goals > b.goals + (5 - b.kicks)) return 0;
+      if (b.goals > a.goals + (5 - a.kicks)) return 1;
+      return null;
+    }
+    if (a.kicks === b.kicks && a.goals !== b.goals) return a.goals > b.goals ? 0 : 1;
+    return null;
+  }
+  function ranking() {
+    return s.players.map((p, i) => i).sort((a, b) => s.stats[b].goals - s.stats[a].goals || s.stats[b].tb - s.stats[a].tb);
+  }
+  function tiedGroups() {
+    const order = ranking(), groups = [];
+    let cur = [order[0]];
+    for (let i = 1; i < order.length; i++) {
+      const a = s.stats[order[i - 1]], b = s.stats[order[i]];
+      if (a.goals === b.goals && a.tb === b.tb) cur.push(order[i]);
+      else { if (cur.length > 1) groups.push(cur); cur = [order[i]]; }
+    }
+    if (cur.length > 1) groups.push(cur);
+    return groups;
+  }
+  function roundLabel() {
+    if (s.phase === 'over') return 'סוף המשחק';
+    const n = s.phase === 'result' ? s.done - 1 : s.done;
+    if (s.mode === 'league') return n < LEAGUE_KICKS ? 'סבב ' + (Math.floor(n / 6) + 1) + ' מתוך 5' : 'הארכה';
+    const r = Math.floor(n / 2) + 1;
+    return r <= 5 ? 'סבב ' + r + ' מתוך 5' : 'מוות פתאומי';
+  }
+  const roleOf = i => i === s.cur[0] ? 'k' : i === s.cur[1] ? 'g' : null;
+
+  // ---------- board and consoles ----------
+  function boardCell(i) {
+    const p = s.players[i], st = s.stats[i], role = roleOf(i);
+    const slots = Math.max(s.mode === 'league' ? 10 : 5, ...s.stats.map(x => x.hist.length));
+    let dots = st.hist.map(r => '<span class="dot ' + r + '" title="' + (r === 'g' ? 'גול' : 'הוצל') + '"></span>').join('');
+    for (let j = st.hist.length; j < slots; j++) dots += '<span class="dot"></span>';
+    const tag = s.phase === 'over' ? '' : role === 'k' ? 'בועט' : role === 'g' ? 'בשער' : 'נח';
+    return '<div class="pcell" style="--c:' + p.color + '">' +
+      '<div class="pname">' + esc(p.name) + '</div><div class="pgoals">' + st.goals + (st.tb ? '<small style="font-size:.5em">+' + st.tb + '</small>' : '') + '</div>' +
+      '<div class="ptag' + (role === 'k' ? ' k' : '') + '">' + tag + '</div>' +
+      '<div class="dots">' + dots + '</div></div>';
+  }
+  function renderBoard() {
+    const info = '<div class="binfo"><div class="mode">' + MODE_HE[s.mode] + '</div><div class="round">' + roundLabel() + '</div></div>';
+    const cells = s.players.map((p, i) => boardCell(i));
+    $('board').innerHTML = s.players.length === 2 ? cells[0] + info + cells[1] : cells.join('') + info;
+  }
+  function buildConsoles() {
+    const box = $('consoles');
+    box.style.setProperty('--n', s.players.length);
+    box.innerHTML = s.players.map((p, i) => {
+      const keys = p.cpu ? '<div class="cpu-face">משחק לבד</div>' :
+        '<div class="keys">' + DIRS.map((d, j) => '<button class="key" data-p="' + i + '" data-dir="' + d + '"><kbd>' + KEYLABELS[p.keyset][j] + '</kbd><span>' + DIR_HE[d] + '</span></button>').join('') + '</div>';
+      return '<section class="console" id="con' + i + '" style="--c:' + p.color + '">' +
+        '<header><h2>' + esc(p.name) + '</h2><span class="role" id="role' + i + '"></span></header>' + keys +
+        '<div class="lock" id="lock' + i + '"></div></section>';
+    }).join('');
+    box.querySelectorAll('.key').forEach(b => b.addEventListener('click', () => { choose(+b.dataset.p, b.dataset.dir); b.blur(); }));
+  }
+
+  function render() {
+    renderBoard();
+    const [k, g] = s.cur;
+    const chip = i => '<span class="chip" style="background:' + s.players[i].color + '"></span>';
+    const rest = s.players.map((p, i) => i).filter(i => i !== k && i !== g);
+    $('roles').innerHTML = '<span>' + chip(k) + esc(s.players[k].name) + ' בועט</span><span>' + chip(g) + esc(s.players[g].name) + ' בשער</span>' +
+      rest.map(i => '<span class="rest">' + esc(s.players[i].name) + ' נח</span>').join('');
+    $('roles').classList.toggle('hide', s.phase === 'result' || s.phase === 'over');
+    s.players.forEach((p, i) => {
+      const role = roleOf(i), con = $('con' + i), badge = $('role' + i), lock = $('lock' + i);
+      con.classList.toggle('kicking', role === 'k');
+      con.classList.toggle('idle', !role && s.phase !== 'over');
+      badge.textContent = role === 'k' ? 'בועט' : role === 'g' ? 'שוער' : 'נח';
+      badge.className = 'role' + (role === 'k' ? ' kick' : '');
+      let text = '', done = false;
+      if (!role) text = s.phase === 'choose' ? 'נח בבעיטה הזאת' : '';
+      else if (s.phase === 'choose') {
+        if (s.pick[role]) { text = p.cpu ? 'המחשב בחר' : 'הבחירה נעולה'; done = true; }
+        else text = p.cpu ? 'חושב…' : role === 'k' ? 'בחר לאן לבעוט' : 'בחר לאן לזנק';
+      } else if (s.phase === 'result' || s.phase === 'over') text = (role === 'k' ? 'בעט ל' : 'זינק ל') + DIR_HE[s.pick[role]];
+      else { text = 'הבחירה נעולה'; done = true; }
+      lock.textContent = text;
+      lock.className = 'lock' + (done ? ' done' : '');
+      con.querySelectorAll('.key').forEach(b => b.disabled = s.phase !== 'choose' || !role || !!s.pick[role]);
+    });
+    $('next').hidden = s.phase !== 'result';
+    syncPhones();
+    if (s.phase === 'choose') {
+      $('status').innerHTML = '<b>' + esc(s.players[k].name) + '</b> בועט, <b>' + esc(s.players[g].name) + '</b> בשער. בחרו בסתר.';
+    }
+  }
+
+  function startChoose() {
+    s.phase = 'choose';
+    s.pick = { k: null, g: null };
+    paintShirts();
+    render();
+    const tok = animTok;
+    s.cur.forEach((idx, j) => {
+      if (!s.players[idx].cpu) return;
+      setTimeout(() => {
+        if (tok === animTok && s.phase === 'choose') choose(idx, DIRS[Math.floor(Math.random() * 3)]);
+      }, 700 + Math.random() * 1000);
+    });
+  }
+
+  function choose(i, dir) {
+    if (!s || s.phase !== 'choose') return;
+    const role = roleOf(i);
+    if (!role || s.pick[role]) return;
+    s.pick[role] = dir;
+    if (!s.players[i].cpu) { audio(); beep(440, .06, .05); }
+    render();
+    if (s.pick.k && s.pick.g) play();
+  }
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  function tween(ms, tok, fn) {
+    return new Promise(res => {
+      const t0 = performance.now();
+      (function frame(now) {
+        if (tok !== animTok) return res(false);
+        const t = Math.min(ms, Math.max(0, now - t0));
+        fn(t, t / ms);
+        if (t >= ms) res(true); else requestAnimationFrame(frame);
+      })(t0);
+    });
+  }
+
+  // run-up in "game time": 1100 ms of running then 280 ms of backswing.
+  // Real time runs 1:1 for the first strides, then everything drops to slow motion until the strike.
+  const RUN_G = 1100, BACK_G = 280, NORMAL = 420, SLOW_RATE = .3;
+  const RUN_REAL = NORMAL + (RUN_G + BACK_G - NORMAL) / SLOW_RATE;
+  const gameTime = t => t <= NORMAL ? t : NORMAL + (t - NORMAL) * SLOW_RATE;
+  const FLIGHT = 520;
+
+  async function play() {
+    const tok = ++animTok;
+    s.phase = 'countdown';
+    render();
+    const kDir = s.pick.k, gDir = s.pick.g;
+    const saved = kDir === gDir;
+    const target = TARGET[kDir];
+
+    // 3, 2, 1 while the goalie bounces on the line
+    $('status').textContent = 'מוכנים…';
+    bed(.08);
+    let swayT = 0;
+    for (const n of [3, 2, 1]) {
+      count.textContent = n; count.className = 'count'; void count.offsetWidth; count.className = 'count pop';
+      beep(n === 1 ? 880 : 660, .18, .12);
+      if (!await tween(850, tok, t => setGoalie(goalieSway(swayT + t)))) return;
+      swayT += 850;
+    }
+    count.className = 'count';
+    whistle();
+    s.phase = 'kick';
+    $('status').textContent = '';
+
+    // run-up, slowing into slow motion as he reaches the ball
+    let slow = false, lastRun = STAND, gPose = GREST;
+    if (!await tween(RUN_REAL, tok, t => {
+      const g = gameTime(t);
+      if (!slow && t > NORMAL) {
+        slow = true; field.classList.add('slowmo');
+        bed(.015, .6); droneStop = drone();
+        for (let i = 0; i < 4; i++) heartbeat(.2 + i * .78);
+      }
+      gPose = goalieSway(swayT + g * (slow ? 1 : 1));
+      setGoalie(gPose);
+      if (g <= RUN_G) {
+        const p = g / RUN_G, e = 1 - Math.pow(1 - p, 1.6);
+        lastRun = runPose(g / 1000 * 2 * Math.PI * 3.4);
+        setKicker(lerp(KICK_START.x, KICK_END.x, e), lerp(KICK_START.y, KICK_END.y, e), lerp(KICK_START.s, KICK_END.s, e), lastRun);
+      } else {
+        setKicker(KICK_END.x, KICK_END.y, KICK_END.s, mix(lastRun, BACKSWING, easeOut((g - RUN_G) / BACK_G)));
+      }
+    })) return;
+
+    // strike: real speed again
+    if (!await tween(80, tok, (t, p) => setKicker(KICK_END.x, KICK_END.y, 1, mix(BACKSWING, STRIKE, p)))) return;
+    field.classList.remove('slowmo');
+    if (droneStop) { droneStop(); droneStop = null; }
+    thud(1);
+    bed(.06, .15);
+
+    // fast shot; the goalie reacts a beat later
+    const g0 = gPose, dive = Object.assign({ arm: 1 }, DIVE[gDir]);
+    if (!await tween(FLIGHT, tok, (t, p) => {
+      ballFlight(1 - Math.pow(1 - p, 1.4), target);
+      setGoalie(mix(g0, dive, easeOut(clamp((t - 50) / (FLIGHT - 90)))));
+      setKicker(KICK_END.x, KICK_END.y, 1, mix(STRIKE, STAND, easeOut(clamp(t / 700))));
+    })) return;
+
+    // resolve
+    if (saved) {
+      thud(.6);
+      const b = BOUNCE[kDir];
+      if (!await tween(650, tok, (t, p) => {
+        const sx = lerp(target.x, b.x, p), gy = lerp(GOAL_Y, b.y, p), sc = lerp(.5, .8, p);
+        const h = (GOAL_Y - target.y) * (1 - p) * (1 - p) + 18 * Math.sin(Math.PI * p);
+        setBall(sx, gy - 6 * sc - h, sc, sx, gy, sc);
+        setKicker(KICK_END.x, KICK_END.y, 1, mix(STRIKE, STAND, easeOut(clamp((t + FLIGHT) / 700))));
+      })) return;
+    } else {
+      swish();
+      net.classList.remove('ripple'); void net.getBBox(); net.classList.add('ripple');
+      const ex = target.x + (target.x - 300) * .08;
+      if (!await tween(420, tok, (t, p) => {
+        const e = easeOut(p), sc = lerp(.5, .42, e);
+        setBall(lerp(target.x, ex, e), lerp(target.y, 172, e * e), sc, lerp(target.x, ex, e), lerp(GOAL_Y, 179, e), sc);
+        setKicker(KICK_END.x, KICK_END.y, 1, mix(STRIKE, STAND, easeOut(clamp((t + FLIGHT) / 700))));
+      })) return;
+    }
+    finish(saved, kDir, gDir);
+  }
+
+  function finish(saved, kDir, gDir) {
+    const [k, g] = s.cur, sk = s.stats[k];
+    sk.kicks++;
+    sk.hist.push(saved ? 's' : 'g');
+    if (saved) s.stats[g].saves++;
+    else if (s.inTB) sk.tb++;
+    else sk.goals++;
+    const kn = esc(s.players[k].name), gn = esc(s.players[g].name);
+    banner.className = 'banner show ' + (saved ? 'save' : 'goal');
+    lastResult = (saved ? 'הצלה! ' : 'גול! ') + kn + ' בעט ל' + DIR_HE[kDir] + ', ' + gn + ' זינק ל' + DIR_HE[gDir];
+    banner.innerHTML = '<div>' + (saved ? 'הצלה!' : 'גול!') + '<small>' + kn + ' בעט ל' + DIR_HE[kDir] + ', ' + gn + ' זינק ל' + DIR_HE[gDir] + '</small></div>';
+    if (saved) { groan(); cheer('P' + g); } else { roar(); cheer('P' + k + ' N'); }
+
+    s.done++;
+    s.notice = '';
+    s.upcoming = nextKick();
+    if (!s.upcoming) {
+      s.phase = 'over';
+      render();
+      const w = ranking()[0];
+      $('status').innerHTML = '<b>' + esc(s.players[w].name) + '</b> ניצח!';
+      const tok = animTok;
+      setTimeout(() => { if (tok === animTok) showResults(); }, 2300);
+      return;
+    }
+    s.phase = 'result';
+    render();
+    let note = s.notice;
+    if (s.mode !== 'league' && s.done === 10) note = 'שוויון אחרי 5 בעיטות לכל צד! עוברים למוות פתאומי.';
+    $('status').innerHTML = (note ? '<b>' + note + '</b> ' : '') + 'לחצו <b>רווח</b> לבעיטה הבאה';
+  }
+
+  function showResults() {
+    const order = ranking(), w = order[0];
+    $('resTitle').innerHTML = '<span style="color:' + s.players[w].color + '">' + esc(s.players[w].name) + '</span> ' +
+      (s.players[w].cpu ? 'ניצח הפעם' : 'ניצח!');
+    $('podium').innerHTML = order.map((i, pos) => {
+      const p = s.players[i], st = s.stats[i];
+      return '<div class="place"><span class="pos">' + (pos + 1) + '</span><span class="chip" style="background:' + p.color + ';margin:0"></span>' +
+        '<span class="nm" style="color:' + p.color + '">' + esc(p.name) + '</span>' +
+        '<span class="st">בעיטות ' + st.kicks + ' · הצלות ' + st.saves + (st.tb ? ' · הארכה ' + st.tb : '') + '</span>' +
+        '<span class="gl">' + st.goals + '</span></div>';
+    }).join('');
+    $('results').hidden = false;
+    syncPhones();
+    roar(); cheer('P' + w + ' N');
+    $('againBtn').focus();
+  }
+
+  function next() {
+    if (!s || s.phase !== 'result') return;
+    animTok++;
+    s.cur = s.upcoming;
+    s.upcoming = null;
+    resetScene();
+    startChoose();
+  }
+
+  // ---------- setup screen ----------
+  let setupMode = 'duo';
+  let savedNames = DEFAULT_NAMES.slice();
+  try {
+    const n = JSON.parse(localStorage.getItem('penalty-names') || 'null');
+    if (Array.isArray(n)) n.slice(0, 3).forEach((v, i) => { if (typeof v === 'string' && v.trim()) savedNames[i] = v; });
+    const m = localStorage.getItem('penalty-mode');
+    if (RULES[m]) setupMode = m;
+  } catch (e) {}
+
+  function renderSetup() {
+    document.querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === setupMode)));
+    const count = setupMode === 'league' ? 3 : 2;
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const cpu = setupMode === 'cpu' && i === 1;
+      const keys = cpu ? '' : setupMode === 'cpu' ? 'A S D / J K L / ← ↓ →' : KEYLABELS[i].join(' ');
+      html += '<div class="nrow"><span class="sw" style="background:' + COLORS[i] + '"></span>' +
+        '<input id="name' + i + '" maxlength="14" aria-label="שם שחקן ' + (i + 1) + '" value="' + (cpu ? 'המחשב' : esc(savedNames[i])) + '"' + (cpu ? ' disabled' : '') + '>' +
+        '<span class="kh">' + keys + '</span></div>';
+    }
+    $('names').innerHTML = html;
+    $('rules').textContent = RULES[setupMode];
+    renderPhoneSetup(count);
+    for (let i = 0; i < count; i++) {
+      const inp = $('name' + i);
+      if (!inp.disabled) inp.addEventListener('input', () => { savedNames[i] = inp.value; });
+    }
+  }
+  function openSetup() {
+    animTok++;
+    if (droneStop) { droneStop(); droneStop = null; }
+    $('results').hidden = true;
+    renderSetup();
+    $('setup').hidden = false;
+    syncPhones();
+    const first = $('name0'); if (first && !first.disabled) first.focus();
+  }
+  function startFromSetup() {
+    if (ctl === 'phones' && !phonesReady()) return;
+    const names = savedNames.map((n, i) => (n || '').trim() || DEFAULT_NAMES[i]);
+    savedNames = names.slice();
+    try { localStorage.setItem('penalty-names', JSON.stringify(names)); localStorage.setItem('penalty-mode', setupMode); } catch (e) {}
+    $('setup').hidden = true;
+    audio();
+    newGame(setupMode, names);
+  }
+  document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => { setupMode = b.dataset.mode; renderSetup(); }));
+  $('startBtn').addEventListener('click', startFromSetup);
+  $('names').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); startFromSetup(); } });
+
+  // ---------- phones: this screen hosts a room, each phone is a controller (controller.html) ----------
+  // Phones reach this page through the free PeerJS broker; after that the link is direct.
+  let ctl = 'keys';
+  try { if (localStorage.getItem('penalty-ctl') === 'phones') ctl = 'phones'; } catch (e) {}
+  let peer = null, roomCode = '', lastResult = '';
+  const phones = [];          // phones[slot] = { conn, pid, name } — slot is the player index
+  const ROOM_PREFIX = 'theyuker-penalty-';
+  const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+  const humanSlots = () => setupMode === 'cpu' ? 1 : setupMode === 'league' ? 3 : 2;
+  const phonesReady = () => { for (let i = 0; i < humanSlots(); i++) if (!phones[i] || !phones[i].conn.open) return false; return true; };
+
+  function setCtl(c) {
+    ctl = c;
+    try { localStorage.setItem('penalty-ctl', c); } catch (e) {}
+    if (c === 'phones') openRoom();
+    renderSetup();
+  }
+
+  function openRoom() {
+    if (peer || typeof Peer === 'undefined') { if (typeof Peer === 'undefined') netStatus('לא ניתן לטעון את רכיב החיבור – בדקו אינטרנט', false); return; }
+    roomCode = Array.from({ length: 4 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+    peer = new Peer(ROOM_PREFIX + roomCode);
+    netStatus('מתחבר…', null);
+    peer.on('open', () => { netStatus('מוכן – מחכים לטלפונים', true); showJoinInfo(); });
+    peer.on('connection', conn => {
+      conn.on('data', msg => onPhoneMessage(conn, msg));
+      conn.on('close', () => { const i = phones.findIndex(p => p && p.conn === conn); if (i >= 0) { phones[i].conn = conn; renderPhoneNames(); } });
+    });
+    peer.on('disconnected', () => { netStatus('החיבור נותק, מתחבר מחדש…', false); try { peer.reconnect(); } catch (e) {} });
+    peer.on('error', err => {
+      if (err.type === 'unavailable-id') { peer.destroy(); peer = null; openRoom(); return; }   // code taken: pick another
+      netStatus('בעיית חיבור: ' + err.type, false);
+    });
+  }
+  function netStatus(text, ok) {
+    const el = $('netStatus'); el.textContent = text;
+    el.className = 'net' + (ok === true ? ' ok' : ok === false ? ' bad' : '');
+  }
+  function joinUrl() { return new URL('controller.html?room=' + roomCode, location.href).href; }
+  function showJoinInfo() {
+    $('roomCode').textContent = roomCode;
+    const link = $('joinLink'); link.href = joinUrl(); link.textContent = new URL('controller.html', location.href).href;
+    try { const q = qrcode(0, 'M'); q.addData(joinUrl()); q.make(); $('qr').innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } catch (e) {}
+  }
+
+  function onPhoneMessage(conn, msg) {
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.t === 'hello') {
+      const name = String(msg.name || '').trim().slice(0, 14) || 'שחקן';
+      // a phone that reconnects (same pid) gets its old place back
+      let slot = phones.findIndex(p => p && p.pid === msg.pid);
+      if (slot < 0) { slot = 0; while (slot < humanSlots() && phones[slot] && phones[slot].conn.open) slot++; }
+      if (slot >= humanSlots()) { conn.send({ t: 'full' }); return; }
+      phones[slot] = { conn, pid: msg.pid, name };
+      if ($('setup').hidden === false) { savedNames[slot] = name; }
+      renderPhoneNames();
+      sendState(slot);
+      return;
+    }
+    const slot = phones.findIndex(p => p && p.conn === conn);
+    if (slot < 0) return;
+    if (msg.t === 'pick' && DIRS.includes(msg.dir) && s && $('setup').hidden) { audio(); choose(slot, msg.dir); }
+    else if (msg.t === 'next') {
+      if (!$('setup').hidden) { if (phonesReady()) startFromSetup(); }
+      else if (!$('results').hidden) again();
+      else if (s && s.phase === 'result') next();
+    }
+  }
+
+  function renderPhoneSetup(count) {
+    document.querySelectorAll('.ctl').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ctl === ctl)));
+    $('joinBox').hidden = ctl !== 'phones';
+    if (ctl !== 'phones') { $('startBtn').disabled = false; return; }
+    if (roomCode && peer && peer.open) showJoinInfo();
+    renderPhoneNames();
+  }
+  function renderPhoneNames() {
+    if (ctl !== 'phones' || $('setup').hidden) { syncPhones(); return; }
+    const count = humanSlots();
+    for (let i = 0; i < count; i++) {
+      const inp = $('name' + i), kh = inp && inp.parentNode.querySelector('.kh');
+      if (!inp) continue;
+      const ph = phones[i], on = ph && ph.conn.open;
+      inp.disabled = true;
+      inp.value = on ? ph.name : '';
+      inp.placeholder = 'ממתין לטלפון…';
+      if (on) savedNames[i] = ph.name;
+      kh.textContent = on ? '📱 מחובר' : '⏳';
+      kh.className = 'kh' + (on ? ' on' : '');
+    }
+    $('startBtn').disabled = !phonesReady();
+    $('startBtn').textContent = phonesReady() ? 'התחילו לשחק' : 'מחכים שכל השחקנים יתחברו…';
+    syncPhones();
+  }
+
+  // what each phone should show right now
+  function phoneView(i) {
+    const p = phones[i], v = { t: 'state', name: p.name, color: COLORS[i], slot: i };
+    if (i >= humanSlots() && !$('setup').hidden) return Object.assign(v, { view: 'out' });
+    if (!$('setup').hidden || !s) return Object.assign(v, { view: 'lobby', ready: phonesReady() });
+    if (i >= s.players.length || s.players[i].cpu) return Object.assign(v, { view: 'out' });
+    const st = s.stats[i];
+    Object.assign(v, { color: s.players[i].color, goals: st.goals, round: roundLabel() });
+    if (!$('results').hidden || s.phase === 'over') {
+      const order = ranking();
+      return Object.assign(v, { view: 'over', place: order.indexOf(i) + 1, winner: s.players[order[0]].name });
+    }
+    const role = roleOf(i);
+    const vs = role === 'k' ? s.players[s.cur[1]].name : role === 'g' ? s.players[s.cur[0]].name : '';
+    if (s.phase === 'result') return Object.assign(v, { view: 'result', result: lastResult });
+    if (s.phase === 'choose') return Object.assign(v, { view: role ? 'choose' : 'rest', role, vs, picked: !!(role && s.pick[role]) });
+    return Object.assign(v, { view: 'watch', role, vs });
+  }
+  function sendState(i) { const p = phones[i]; if (p && p.conn.open) { try { p.conn.send(phoneView(i)); } catch (e) {} } }
+  function syncPhones() { phones.forEach((p, i) => sendState(i)); }
+
+  document.querySelectorAll('.ctl').forEach(b => b.addEventListener('click', () => setCtl(b.dataset.ctl)));
+  if (ctl === 'phones') openRoom();
+
+  // ---------- input ----------
+  function again() { audio(); newGame(s.mode, s.mode === 'cpu' ? [s.players[0].name] : s.players.map(p => p.name)); }
+  document.addEventListener('keydown', e => {
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!$('setup').hidden) return;
+    if (!$('results').hidden) {
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); again(); }
+      return;
+    }
+    for (let si = 0; si < KEYSETS.length; si++) {
+      const j = KEYSETS[si].indexOf(e.code);
+      if (j < 0) continue;
+      e.preventDefault();
+      const player = s.mode === 'cpu' ? 0 : si;
+      if (player < s.players.length) choose(player, DIRS[j]);
+      return;
+    }
+    if ((e.code === 'Space' || e.code === 'Enter') && s.phase === 'result') { e.preventDefault(); next(); }
+    else if (e.code === 'KeyM') { audio(); setMuted(!muted); }
+  });
+  $('next').addEventListener('click', next);
+  $('sound').addEventListener('click', () => { audio(); setMuted(!muted); });
+  $('restart').addEventListener('click', again);
+  $('setupBtn').addEventListener('click', openSetup);
+  $('againBtn').addEventListener('click', again);
+  $('changeBtn').addEventListener('click', openSetup);
+
+  function start(data) {
+    setMuted(muted);
+    const old = data && data.s;
+    if (old && old.players && old.stats && old.cur) {
+      s = old;
+      setupScene();
+      if (s.phase === 'over') { render(); showResults(); }
+      else {
+        if (s.phase === 'result') { s.cur = s.upcoming; s.upcoming = null; }
+        startChoose();
+      }
+      $('setup').hidden = !data.setupOpen;
+      if (data.setupOpen) renderSetup();
+    } else {
+      newGame(setupMode, savedNames.map((n, i) => (n || '').trim() || DEFAULT_NAMES[i]));
+      renderSetup();
+      $('setup').hidden = false;
+    }
+  }
+  window.claude?.hot?.snapshot?.(() => ({ s, setupOpen: !$('setup').hidden }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body></html>
