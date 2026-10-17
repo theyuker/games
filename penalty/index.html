@@ -222,6 +222,25 @@ body {
 .join .net.ok { color: #6be3a4; } .join .net.bad { color: var(--save); }
 .nrow .kh.on { color: #6be3a4; }
 .btn:disabled { opacity: .45; cursor: default; }
+.ctl[data-ctl="pass"] { grid-column: 1 / -1; }
+body.pass .keys { display: none; }
+/* pass-and-play: hides the screen while the phone changes hands, then shows one player's three choices */
+.pass-cover {
+  position: fixed; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px; padding: 24px 16px; text-align: center; background: radial-gradient(120% 70% at 50% 0%, #1b3a2b 0%, var(--bg) 70%);
+}
+.pc-who { font-size: 4rem; line-height: 1; }
+.pc-msg { font-family: var(--display); font-size: 1.9rem; line-height: 1.3; color: var(--chalk); max-width: 22em; text-wrap: balance; }
+.pc-msg b { color: var(--c, var(--led)); }
+.pass-cover .pc-ready { font-size: 1.5rem; padding: 18px 28px; border-radius: 16px; width: 100%; max-width: 360px; }
+.pc-dirs { direction: ltr; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 480px; }
+.pc-dir {
+  font: inherit; font-size: 1.3rem; font-weight: 800; color: var(--chalk); background: var(--panel); border: 3px solid var(--c, var(--led));
+  border-radius: 18px; padding: 26px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.pass-cover .pc-setup { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); font-size: .9rem; opacity: .7; }
+.pc-dir b { font-size: 2.4rem; line-height: 1; }
+.pc-dir:active { transform: scale(.96); background: #1a3326; }
 @media (max-width: 640px) {
   .consoles { grid-template-columns: 1fr; gap: 6px; }
   .modes { grid-template-columns: 1fr; }
@@ -398,6 +417,7 @@ body {
     <div class="ctls" id="ctls">
       <button class="ctl" data-ctl="keys" aria-pressed="true"><b>⌨️ מקלדת</b><span>כולם ליד מחשב אחד, כל שחקן עם המקשים שלו</span></button>
       <button class="ctl" data-ctl="phones" aria-pressed="false"><b>📱 טלפונים</b><span>כל שחקן בוחר בסתר בטלפון שלו, המסך הזה מציג את המגרש</span></button>
+      <button class="ctl" data-ctl="pass" aria-pressed="false"><b>📱 טלפון אחד – מעבירים</b><span>משחקים על המכשיר הזה: בכל תור מעבירים אותו לשחקן הבא, והוא לוחץ בסתר</span></button>
     </div>
     <div class="join" id="joinBox" hidden>
       <div class="qr" id="qr"></div>
@@ -413,6 +433,18 @@ body {
     <p class="rules" id="rules"></p>
     <div class="row"><button class="btn primary" id="startBtn">התחילו לשחק</button></div>
   </div>
+</div>
+
+<div class="pass-cover" id="passCover" hidden>
+  <div class="pc-who" id="pcWho"></div>
+  <div class="pc-msg" id="pcMsg"></div>
+  <button class="btn primary pc-ready" id="pcReady"></button>
+  <div class="pc-dirs" id="pcDirs">
+    <button class="pc-dir" data-dir="left"><b>⬅️</b>שמאל</button>
+    <button class="pc-dir" data-dir="mid"><b>⬆️</b>אמצע</button>
+    <button class="pc-dir" data-dir="right"><b>➡️</b>ימין</button>
+  </div>
+  <button class="btn pc-setup" id="pcSetup">הגדרות ושחקנים</button>
 </div>
 
 <div class="modal" id="results" hidden>
@@ -858,7 +890,9 @@ body {
       con.querySelectorAll('.key').forEach(b => b.disabled = s.phase !== 'choose' || !role || !!s.pick[role]);
     });
     $('next').hidden = s.phase !== 'result';
+    $('next').textContent = ctl === 'pass' ? 'לבעיטה הבאה ⚽' : 'לבעיטה הבאה (רווח)';
     syncPhones();
+    renderPassCover();
     if (s.phase === 'choose') {
       $('status').innerHTML = '<b>' + esc(s.players[k].name) + '</b> בועט, <b>' + esc(s.players[g].name) + '</b> בשער. בחרו בסתר.';
     }
@@ -1018,7 +1052,7 @@ body {
     render();
     let note = s.notice;
     if (s.mode !== 'league' && s.done === 10) note = 'שוויון אחרי 5 בעיטות לכל צד! עוברים למוות פתאומי.';
-    $('status').innerHTML = (note ? '<b>' + note + '</b> ' : '') + 'לחצו <b>רווח</b> לבעיטה הבאה';
+    $('status').innerHTML = (note ? '<b>' + note + '</b> ' : '') + (ctl === 'pass' ? 'לחצו <b>לבעיטה הבאה</b>' : 'לחצו <b>רווח</b> לבעיטה הבאה');
   }
 
   function showResults() {
@@ -1063,7 +1097,7 @@ body {
     let html = '';
     for (let i = 0; i < count; i++) {
       const cpu = setupMode === 'cpu' && i === 1;
-      const keys = cpu ? '' : setupMode === 'cpu' ? 'A S D / J K L / ← ↓ →' : KEYLABELS[i].join(' ');
+      const keys = cpu || ctl === 'pass' ? '' : setupMode === 'cpu' ? 'A S D / J K L / ← ↓ →' : KEYLABELS[i].join(' ');
       html += '<div class="nrow"><span class="sw" style="background:' + COLORS[i] + '"></span>' +
         '<input id="name' + i + '" maxlength="14" aria-label="שם שחקן ' + (i + 1) + '" value="' + (cpu ? 'המחשב' : esc(savedNames[i])) + '"' + (cpu ? ' disabled' : '') + '>' +
         '<span class="kh">' + keys + '</span></div>';
@@ -1078,6 +1112,7 @@ body {
   }
   function openSetup() {
     animTok++;
+    hidePassCover();
     if (droneStop) { droneStop(); droneStop = null; }
     $('results').hidden = true;
     renderSetup();
@@ -1101,7 +1136,7 @@ body {
   // ---------- phones: this screen hosts a room, each phone is a controller (controller.html) ----------
   // Phones reach this page through the free PeerJS broker; after that the link is direct.
   let ctl = 'keys';
-  try { if (localStorage.getItem('penalty-ctl') === 'phones') ctl = 'phones'; } catch (e) {}
+  try { const c = localStorage.getItem('penalty-ctl'); if (c === 'phones' || c === 'pass') ctl = c; } catch (e) {}
   let peer = null, roomCode = '', lastResult = '';
   const phones = [];          // phones[slot] = { conn, pid, name } — slot is the player index
   const ROOM_PREFIX = 'theyuker-penalty-';
@@ -1112,6 +1147,7 @@ body {
 
   function setCtl(c) {
     ctl = c;
+    document.body.classList.toggle('pass', c === 'pass');
     try { localStorage.setItem('penalty-ctl', c); } catch (e) {}
     if (c === 'phones') openRoom();
     renderSetup();
@@ -1171,7 +1207,7 @@ body {
   function renderPhoneSetup(count) {
     document.querySelectorAll('.ctl').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ctl === ctl)));
     $('joinBox').hidden = ctl !== 'phones';
-    if (ctl !== 'phones') { $('startBtn').disabled = false; return; }
+    if (ctl !== 'phones') { $('startBtn').disabled = false; $('startBtn').textContent = 'התחילו לשחק'; return; }
     if (roomCode && peer && peer.open) showJoinInfo();
     renderPhoneNames();
   }
@@ -1217,6 +1253,47 @@ body {
 
   document.querySelectorAll('.ctl').forEach(b => b.addEventListener('click', () => setCtl(b.dataset.ctl)));
   if (ctl === 'phones') openRoom();
+
+  // ---------- one phone passed from hand to hand ----------
+  // The kicker picks first, then the goalie; a cover hides the screen while the phone changes hands.
+  let passStage = null;   // { idx, step: 'ready' | 'pick' }
+  function passTurn() {
+    if (ctl !== 'pass' || !s || s.phase !== 'choose' || !$('setup').hidden || !$('results').hidden) return null;
+    for (const role of ['k', 'g']) {
+      const idx = role === 'k' ? s.cur[0] : s.cur[1];
+      if (!s.players[idx].cpu && !s.pick[role]) return { idx, role };
+    }
+    return null;
+  }
+  function hidePassCover() { passStage = null; $('passCover').hidden = true; }
+  function renderPassCover() {
+    const t = passTurn();
+    if (!t) return hidePassCover();
+    if (!passStage || passStage.idx !== t.idx) passStage = { idx: t.idx, step: 'ready' };
+    const p = s.players[t.idx], nm = '<b>' + esc(p.name) + '</b>', kick = t.role === 'k';
+    const cover = $('passCover');
+    cover.style.setProperty('--c', p.color);
+    cover.hidden = false;
+    $('pcWho').textContent = kick ? '⚽' : '🧤';
+    const ready = passStage.step === 'ready';
+    $('pcMsg').innerHTML = ready ? 'העבירו את הטלפון ל-' + nm + '<br>(' + (kick ? 'בועט ⚽' : 'שוער 🧤') + ')'
+                                 : nm + ', ' + (kick ? 'לאן לבעוט?' : 'לאן לזנק?');
+    $('pcReady').hidden = !ready;
+    $('pcReady').textContent = 'אני ' + p.name + ' – מוכן';
+    $('pcDirs').hidden = ready;
+  }
+  $('pcSetup').addEventListener('click', openSetup);
+  $('pcReady').addEventListener('click', () => { if (passStage) { passStage.step = 'pick'; renderPassCover(); } });
+  $('pcDirs').addEventListener('click', e => {
+    const b = e.target.closest('[data-dir]');
+    if (!b || !passStage || passStage.step !== 'pick') return;
+    const idx = passStage.idx;
+    passStage = null;
+    audio();
+    choose(idx, b.dataset.dir);   // render() then shows the next player's cover, or hides it for the kick
+    renderPassCover();
+  });
+  document.body.classList.toggle('pass', ctl === 'pass');
 
   // ---------- input ----------
   function again() { audio(); newGame(s.mode, s.mode === 'cpu' ? [s.players[0].name] : s.players.map(p => p.name)); }

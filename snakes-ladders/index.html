@@ -150,13 +150,17 @@ svg.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none
   <section id="setup">
     <div class="hero">
       <h1>סולמות ונחשים</h1>
-      <p>זורקים שלוש קוביות וצועדים. הסולם מעלה, הנחש מוריד. טריפל (שלוש קוביות זהות) נותן תור נוסף. בשורה האחרונה זורקים קוביה אחת בלבד. מנצח מי שנוחת בדיוק על המשבצת האחרונה; מי שעובר אותה חוזר אחורה את מה שעודף.</p>
+      <p><span id="diceRules"></span> הסולם מעלה, הנחש מוריד. בשורה האחרונה זורקים קוביה אחת בלבד. מנצח מי שנוחת בדיוק על המשבצת האחרונה; מי שעובר אותה חוזר אחורה את מה שעודף.</p>
     </div>
     <div class="field">
       <span class="label">כמה משתתפים?</span>
       <div class="chips" id="countChips"></div>
     </div>
     <div id="playerCards"></div>
+    <div class="field">
+      <span class="label">כמה קוביות?</span>
+      <div class="chips" id="diceChips"></div>
+    </div>
     <div class="field">
       <span class="label">גודל הלוח</span>
       <div class="chips" id="sizeChips"></div>
@@ -217,13 +221,15 @@ const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,reduced?Math.min(ms,40):ms));
 const rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 
-let setup={count:2,players:[{name:'שחקן 1',ch:0},{name:'שחקן 2',ch:3}],level:20,wrong:'retry',math:true,size:100};
+let setup={dice:3,count:2,players:[{name:'שחקן 1',ch:0},{name:'שחקן 2',ch:3}],level:20,wrong:'retry',math:true,size:100};
 let G=null;            // live game: {players,cur,snakes,ladders,log}
 let busy=false, sound=true, audio=null;
 
 /* ---------- setup screen ---------- */
 function renderSetup(){
   $('#countChips').innerHTML=[2,3,4,5].map(n=>`<button class="chip num" data-n="${n}" aria-pressed="${setup.count===n}">${n}</button>`).join('');
+  $('#diceChips').innerHTML=[1,2,3].map(n=>`<button class="chip num" data-d="${n}" aria-pressed="${setup.dice===n}">${n}</button>`).join('');
+  $('#diceRules').textContent=DICE_RULES[setup.dice];
   $('#sizeChips').innerHTML=[100,200].map(v=>`<button class="chip num" data-s="${v}" aria-pressed="${setup.size===v}">עד ${v}</button>`).join('');
   $('#mathChips').innerHTML=[[true,'עם תרגילי חיבור'],[false,'משחק רגיל, בלי תרגילים']].map(([v,l])=>`<button class="chip" data-m="${v}" aria-pressed="${setup.math===v}">${l}</button>`).join('');
   $('#mathOpts').hidden=!setup.math;
@@ -245,6 +251,7 @@ $('#countChips').onclick=e=>{const b=e.target.closest('[data-n]');if(!b)return;
   const n=+b.dataset.n; setup.count=n;
   while(setup.players.length<n){const used=setup.players.map(p=>p.ch);const free=CHARACTERS.findIndex((_,c)=>!used.includes(c));setup.players.push({name:'שחקן '+(setup.players.length+1),ch:free})}
   setup.players.length=n; renderSetup()};
+$('#diceChips').onclick=e=>{const b=e.target.closest('[data-d]');if(b){setup.dice=+b.dataset.d;renderSetup()}};
 $('#sizeChips').onclick=e=>{const b=e.target.closest('[data-s]');if(b){setup.size=+b.dataset.s;renderSetup()}};
 $('#mathChips').onclick=e=>{const b=e.target.closest('[data-m]');if(b){setup.math=b.dataset.m==='true';renderSetup()}};
 $('#levelChips').onclick=e=>{const b=e.target.closest('[data-l]');if(b){setup.level=+b.dataset.l;renderSetup()}};
@@ -260,7 +267,10 @@ const U={cw:100,ch:100};
 function center(n){const C=G.cols,R=G.rows,r=Math.floor((n-1)/C),c=(n-1)%C,x=r%2===0?C-1-c:c;return{x:(x+.5)*U.cw,y:(R-1-r+.5)*U.ch}}
 const rowOf=(n,C=G.cols)=>Math.floor((n-1)/C);
 const inLastRow=pos=>pos>G.size-G.cols;
-const diceCount=p=>inLastRow(p.pos)?1:3;
+const diceCount=p=>inLastRow(p.pos)?1:(G.dice||3);
+// with 2 or 3 dice, all dice showing the same number gives another turn
+const SAME_NAME={2:'דאבל',3:'טריפל'};
+const DICE_RULES={1:'זורקים קוביה אחת וצועדים.',2:'זורקים שתי קוביות וצועדים. דאבל (שתי קוביות זהות) נותן תור נוסף.',3:'זורקים שלוש קוביות וצועדים. טריפל (שלוש קוביות זהות) נותן תור נוסף.'};
 function measure(){
   const b=$('#board'),W=b.clientWidth/G.cols,H=b.clientHeight/G.rows,m=Math.min(W,H)||1;
   U.cw=100*W/m;U.ch=100*H/m;
@@ -452,7 +462,7 @@ function renderSide(){
   const p=G.players[G.cur];
   $('#who').innerHTML=`<span class="me" style="border-color:${p.color}">${CHARACTERS[p.ch][0]}</span><div class="t"><small>התור של</small><b>${esc(p.name)}</b></div>`;
   const n=diceCount(p);
-  if(document.querySelectorAll('.die').length!==n)renderDice(n===1?[1]:[1,2,3]);
+  if(document.querySelectorAll('.die').length!==n)renderDice([1,2,3].slice(0,n));
   $('#diceNote').hidden=n!==1;
   $('#players').innerHTML=G.players.map((q,i)=>`<div class="prow${i===G.cur?' cur':''}"><span class="me" style="border-color:${q.color}">${CHARACTERS[q.ch][0]}</span><span class="n">${esc(q.name)}</span><span class="p">משבצת ${q.pos}</span></div>`).join('');
 }
@@ -462,9 +472,9 @@ async function playTurn(){
   if(busy||!G)return;busy=true;$('#rollBtn').disabled=true;
   const i=G.cur,p=G.players[i],nm=esc(p.name);
   const vals=await rollDice(),sum=vals.reduce((s,v)=>s+v,0);
-  const triple=vals.length===3&&vals[0]===vals[1]&&vals[1]===vals[2];
-  $('#sum').innerHTML=(vals.length>1?`${vals.join(' + ')} = `:'')+`<em>${sum}</em>`+(triple?'<span class="triple">טריפל! תור נוסף</span>':'');
-  if(triple){addLog(`טריפל ל־${nm}! מקבל/ת תור נוסף`);[784,988,1175].forEach((f,k)=>setTimeout(()=>beep(f,.12),k*90))}
+  const triple=vals.length>1&&vals.every(v=>v===vals[0]),same=SAME_NAME[vals.length];
+  $('#sum').innerHTML=(vals.length>1?`${vals.join(' + ')} = `:'')+`<em>${sum}</em>`+(triple?`<span class="triple">${same}! תור נוסף</span>`:'');
+  if(triple){addLog(`${same} ל־${nm}! מקבל/ת תור נוסף`);[784,988,1175].forEach((f,k)=>setTimeout(()=>beep(f,.12),k*90))}
   await sleep(triple?900:350);
   const S=G.size,start=p.pos,raw=start+sum,target=raw>S?2*S-raw:raw;
   if(raw>S){
@@ -511,7 +521,7 @@ function startGame(same){
   const cols=setup.size===200&&wide?20:10,rows=setup.size/cols;
   const b=genBoard(setup.size,cols);
   G={size:setup.size,cols,rows,players:setup.players.map((p,i)=>({name:(p.name||'').trim()||CHARACTERS[p.ch][1],ch:p.ch,color:COLORS[i],pos:1})),
-     cur:0,snakes:b.snakes,ladders:b.ladders,level:setup.level,wrong:setup.wrong,math:setup.math,log:[]};
+     cur:0,dice:setup.dice,snakes:b.snakes,ladders:b.ladders,level:setup.level,wrong:setup.wrong,math:setup.math,log:[]};
   mountGame();addLog('המשחק התחיל. בהצלחה!');
 }
 function mountGame(){
@@ -528,7 +538,7 @@ $('#setupBtn').onclick=()=>{if(!busy)showSetup()};
 /* ---------- boot (keeps a game in progress across live updates) ---------- */
 window.claude?.hot?.snapshot?.(()=>({setup,G:busy?null:G}));
 function boot(data){
-  if(data?.setup)setup={math:true,size:100,...data.setup};
+  if(data?.setup)setup={math:true,size:100,dice:3,...data.setup};
   renderSetup();
   if(data?.G){const s=data.G.size||100;G={size:s,cols:10,rows:s/10,...data.G};mountGame()}
 }
