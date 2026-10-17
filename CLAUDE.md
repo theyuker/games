@@ -19,4 +19,5 @@ Personal games only. Work tools (Idan Lifts, cabin estimator etc.) never go here
 
 ## Game notes
 - `multiplication-game`: voice answers in Hebrew (`he-IL`); the player picks operations (×, ÷, +, −, multi-select) and a number range 0–20; one high-score board per combination in localStorage (`board:<ops>:<lo>-<hi>`). Wrong / not-understood feedback waits 1.2 s (phones split answers into several final results); correct answers count at once. Player chips = only the last 4 names that started a round on this device (no fixed players; a one-time cleanup flagged `mult-players-v2` removed the old fixed "תומר").
-- `penalty`: keyboard mode must keep working. Phone mode = this screen hosts a PeerJS room (`theyuker-penalty-<CODE>`), phones open `controller.html?room=CODE`.
+- `penalty`: three control modes under "איך שולטים?" (`penalty-ctl`), all must keep working: `keys` (keyboard, A S D / J K L / arrows), `phones` (this screen hosts a PeerJS room `theyuker-penalty-<CODE>`, phones open `controller.html?room=CODE`), `pass` (one device passed between players: a cover screen per pick hides the other's choice).
+- `snakes-ladders`: setup chooses 1–3 dice (default 3); all dice equal (2+ dice) = extra turn; last row always 1 die.
