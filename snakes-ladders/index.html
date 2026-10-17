@@ -1,0 +1,538 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>סולמות ונחשים</title><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>סולמות ונחשים</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Varela+Round&display=swap">
+<style>
+/* Layout: one-screen game table — board on one side, a turn panel (dice, roll, players) on the other; stacks on phones. */
+:root{
+  --bg:#eef0fa; --panel:#ffffff; --ink:#221d3d; --muted:#625c86; --line:#d9d6ee;
+  --grape:#5b3fd6; --grape-ink:#ffffff; --sun:#ffc531; --good:#1f9d5c; --bad:#d63b48;
+  --frame:#3a2f7a;
+  --display:"Secular One","Varela Round","Arial Hebrew",Arial,sans-serif;
+  --body:"Varela Round","Arial Hebrew",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141228; --panel:#211d3f; --ink:#f1effd; --muted:#a9a3cf; --line:#38325f;
+  --grape:#8b74ff; --grape-ink:#120f26; --sun:#ffcf4d; --good:#3ccb82; --bad:#ff6b76; --frame:#0b0a1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141228; --panel:#211d3f; --ink:#f1effd; --muted:#a9a3cf; --line:#38325f;
+  --grape:#8b74ff; --grape-ink:#120f26; --sun:#ffcf4d; --good:#3ccb82; --bad:#ff6b76; --frame:#0b0a1a; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;box-sizing:border-box}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+h1,h2{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* ---------- setup ---------- */
+#setup{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hero h1{font-size:clamp(34px,6vw,54px);line-height:1;color:var(--grape)}
+.hero p{margin:0;color:var(--muted);max-width:52ch;line-height:1.5}
+.field{display:flex;flex-direction:column;gap:8px}
+.label{font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 16px;font-size:16px}
+.chip[aria-pressed="true"]{background:var(--grape);border-color:var(--grape);color:var(--grape-ink)}
+.chip.num{min-width:48px;font-family:var(--display);font-size:20px}
+#playerCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pcard{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pcard .top{display:flex;align-items:center;gap:10px}
+.pcard .me{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:28px;flex:none;border:3px solid}
+.pcard input{flex:1;min-width:0;font:inherit;font-size:17px;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.chars{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.chars button{aspect-ratio:1;border:2px solid transparent;background:var(--bg);border-radius:10px;font-size:22px;padding:0;line-height:1}
+.chars button[aria-pressed="true"]{border-color:var(--grape);background:var(--panel)}
+.chars button:disabled{opacity:.22;cursor:not-allowed}
+.big{border:0;background:var(--grape);color:var(--grape-ink);font-family:var(--display);font-size:24px;padding:12px 28px;border-radius:16px;box-shadow:0 5px 0 color-mix(in srgb,var(--grape) 55%,#000)}
+.big:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 color-mix(in srgb,var(--grape) 55%,#000)}
+.big:disabled{opacity:.5;cursor:default}
+.ghost{border:2px solid var(--line);background:transparent;border-radius:12px;padding:8px 14px;font-size:14px}
+
+/* ---------- game ---------- */
+/* The game fills the viewport exactly: the board stretches into all the space the side panel leaves, so nothing scrolls. */
+#game{display:flex;gap:16px;align-items:stretch;
+  height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.board-wrap{flex:1 1 0;min-width:0;min-height:0;position:relative}
+.board{--cols:10;--rows:10;--cell:60px;position:absolute;inset:0;direction:ltr;
+  border:clamp(5px,1vw,10px) solid var(--frame);border-radius:16px;overflow:hidden;
+  box-shadow:0 14px 30px rgba(20,10,60,.25)}
+.cells{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--cols),1fr);grid-template-rows:repeat(var(--rows),1fr)}
+.cell{position:relative;color:#2a2442;font-family:var(--display);font-size:max(10px,calc(var(--cell) * .24));padding:calc(var(--cell) * .04) calc(var(--cell) * .07);line-height:1}
+.cell.goal{background:repeating-conic-gradient(#ffd23f 0 25%,#fff4c2 0 50%) 0 0/50% 50% !important}
+.cell.goal::after{content:"🏁";position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--cell) * .5)}
+.cell.hot{animation:hot .9s ease-in-out infinite alternate}
+@keyframes hot{to{box-shadow:inset 0 0 0 calc(var(--cell) * .06) #ffffff, inset 0 0 0 calc(var(--cell) * .1) #5b3fd6}}
+svg.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.token{position:absolute;width:calc(var(--cell) * .8);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;display:grid;place-items:center;
+  font-size:calc(var(--cell) * .5);line-height:1;background:#fff;border:calc(var(--cell) * .06) solid;box-shadow:0 calc(var(--cell) * .05) 0 rgba(0,0,0,.28);
+  transition:left .2s ease,top .2s ease;z-index:2}
+.token.moving{z-index:5}
+.token.current{outline:calc(var(--cell) * .05) dashed #fff;outline-offset:calc(var(--cell) * .03)}
+.token.hop{animation:hop .22s ease-out}
+@keyframes hop{50%{transform:translate(-50%,-85%) scale(1.12)}}
+
+.side{flex:0 0 280px;display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0;overflow-y:auto}
+.turn{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.who{display:flex;align-items:center;gap:12px;align-self:stretch}
+.who .me{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:34px;border:4px solid;background:#fff;flex:none}
+.who .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.who small{color:var(--muted);font-size:13px}
+.who b{font-family:var(--display);font-weight:400;font-size:24px;overflow-wrap:anywhere}
+.dice{display:flex;gap:12px;direction:ltr}
+.die{width:62px;height:62px;border-radius:14px;background:#fffdf7;border:2px solid #d8d2c0;box-shadow:0 4px 0 #c9c1a8;
+  display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;gap:2px}
+.die i{border-radius:50%;background:transparent;margin:2px}
+.die i.on{background:#2a2442}
+.die.roll{animation:tumble .12s linear infinite}
+@keyframes tumble{25%{transform:rotate(14deg) translateY(-4px)}75%{transform:rotate(-14deg)}}
+.sum{min-height:30px;font-size:20px;font-family:var(--display);direction:ltr;unicode-bidi:isolate;color:var(--ink);font-variant-numeric:tabular-nums}
+.sum em{font-style:normal;color:var(--grape)}
+.dice-note{font-size:14px;color:var(--grape);background:color-mix(in srgb,var(--grape) 12%,transparent);padding:4px 12px;border-radius:999px}
+.sum .triple{color:var(--good);font-size:17px;margin-inline-start:8px}
+#rollBtn{width:100%;font-size:30px;padding:14px}
+.players{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:8px;display:flex;flex-direction:column}
+.prow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px}
+.prow.cur{background:color-mix(in srgb,var(--sun) 32%,transparent)}
+.prow .me{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:20px;border:3px solid;background:#fff;flex:none}
+.prow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .p{font-family:var(--display);font-variant-numeric:tabular-nums;color:var(--muted)}
+.log{list-style:none;margin:0;padding:0 4px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);line-height:1.4}
+.log li:first-child{color:var(--ink)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(15,10,40,.55);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--panel);color:var(--ink);border-radius:24px;padding:20px;width:min(380px,100%);display:flex;flex-direction:column;gap:14px;align-items:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.85);opacity:.4}}
+.sheet .q-head{color:var(--muted);font-size:15px;text-align:center}
+.eq{font-family:var(--display);font-size:46px;direction:ltr;display:flex;gap:12px;align-items:center;font-variant-numeric:tabular-nums}
+.ans{min-width:96px;height:64px;border-radius:14px;border:3px dashed var(--grape);display:grid;place-items:center;padding:0 10px}
+.ans.ok{border-style:solid;border-color:var(--good);color:var(--good)}
+.ans.no{border-style:solid;border-color:var(--bad);color:var(--bad)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.feedback{min-height:24px;font-size:18px;text-align:center}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;direction:ltr}
+.pad button{font-family:var(--display);font-size:26px;padding:10px 0;border-radius:14px;border:2px solid var(--line);background:var(--bg)}
+.pad .go{background:var(--good);border-color:var(--good);color:#fff}
+.win .champ{font-size:92px;line-height:1}
+.win h2{font-size:36px;color:var(--grape);text-align:center}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+@media (max-width:900px){
+  #game{flex-direction:column;gap:10px}
+  .side{flex:0 0 auto;max-height:42%;width:100%}
+  .turn{display:grid;grid-template-columns:1fr auto;gap:8px 12px;padding:10px;align-items:center}
+  .who{grid-column:1 / -1}
+  .who .me{width:40px;height:40px;font-size:24px;border-width:3px}
+  .who b{font-size:20px}
+  .dice{gap:8px}
+  .die{width:44px;height:44px;padding:5px;border-radius:10px}
+  .sum{min-height:0;font-size:17px}
+  .dice-note{grid-column:1 / -1;justify-self:center}
+  #rollBtn{grid-column:1 / -1;font-size:24px;padding:8px}
+}
+@media (max-width:420px){.eq{font-size:38px}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s !important;transition-duration:.01s !important}}
+</style>
+
+<div dir="rtl">
+  <section id="setup">
+    <div class="hero">
+      <h1>סולמות ונחשים</h1>
+      <p>זורקים שלוש קוביות וצועדים. הסולם מעלה, הנחש מוריד. טריפל (שלוש קוביות זהות) נותן תור נוסף. בשורה האחרונה זורקים קוביה אחת בלבד. מנצח מי שנוחת בדיוק על המשבצת האחרונה; מי שעובר אותה חוזר אחורה את מה שעודף.</p>
+    </div>
+    <div class="field">
+      <span class="label">כמה משתתפים?</span>
+      <div class="chips" id="countChips"></div>
+    </div>
+    <div id="playerCards"></div>
+    <div class="field">
+      <span class="label">גודל הלוח</span>
+      <div class="chips" id="sizeChips"></div>
+    </div>
+    <div class="field">
+      <span class="label">סוג המשחק</span>
+      <div class="chips" id="mathChips"></div>
+    </div>
+    <div id="mathOpts" style="display:flex;flex-direction:column;gap:20px">
+      <div class="field">
+        <span class="label">רמת התרגילים</span>
+        <div class="chips" id="levelChips"></div>
+      </div>
+      <div class="field">
+        <span class="label">מה קורה בתשובה שגויה?</span>
+        <div class="chips" id="wrongChips"></div>
+      </div>
+    </div>
+    <div><button class="big" id="startBtn">מתחילים לשחק</button></div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="cells" id="cells"></div>
+        <svg class="overlay" id="overlay" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
+        <div id="tokens"></div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="turn">
+        <div class="who" id="who"></div>
+        <div class="dice" id="dice"></div>
+        <div class="sum" id="sum"></div>
+        <div class="dice-note" id="diceNote" hidden>שורה אחרונה: זורקים קוביה אחת</div>
+        <button class="big" id="rollBtn">זרוק</button>
+      </div>
+      <div class="players" id="players"></div>
+      <ul class="log" id="log"></ul>
+      <div class="tools">
+        <button class="ghost" id="soundBtn">צלילים: פועלים</button>
+        <button class="ghost" id="newBoardBtn">לוח חדש, אותם שחקנים</button>
+        <button class="ghost" id="setupBtn">חזרה להגדרות</button>
+      </div>
+    </aside>
+  </section>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+const CHARACTERS=[['🦁','אריה'],['🐯','נמר'],['🐼','פנדה'],['🦊','שועל'],['🐸','צפרדע'],['🐵','קוף'],['🦄','חד־קרן'],['🐙','תמנון'],['🐧','פינגווין'],['🐰','ארנב'],['🐶','כלב'],['🐱','חתול'],['🐲','דרקון'],['🦖','דינוזאור'],['🐢','צב'],['🦉','ינשוף'],['🚀','חללית'],['🤖','רובוט']];
+const COLORS=['#e2464f','#1f8fd1','#22a565','#f08a24','#9b4fd0'];
+const SNAKE_COLORS=[['#2fb36d','#bff0b0','#17643d'],['#e2464f','#ffd0c9','#7c1820'],['#7b55d9','#e2d6ff','#3c2382'],['#f08a24','#ffe3a8','#8a4308'],['#1f9bd1','#c6ecff','#0d4f70'],['#d94fa8','#ffd2ef','#7a1c58']];
+const LEVELS=[[10,'עד 10'],[20,'עד 20'],[100,'עד 100']];
+const WRONG=[['retry','מנסים שוב עד שפותרים'],['back','חוזרים למשבצת הקודמת']];
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,reduced?Math.min(ms,40):ms));
+const rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+
+let setup={count:2,players:[{name:'שחקן 1',ch:0},{name:'שחקן 2',ch:3}],level:20,wrong:'retry',math:true,size:100};
+let G=null;            // live game: {players,cur,snakes,ladders,log}
+let busy=false, sound=true, audio=null;
+
+/* ---------- setup screen ---------- */
+function renderSetup(){
+  $('#countChips').innerHTML=[2,3,4,5].map(n=>`<button class="chip num" data-n="${n}" aria-pressed="${setup.count===n}">${n}</button>`).join('');
+  $('#sizeChips').innerHTML=[100,200].map(v=>`<button class="chip num" data-s="${v}" aria-pressed="${setup.size===v}">עד ${v}</button>`).join('');
+  $('#mathChips').innerHTML=[[true,'עם תרגילי חיבור'],[false,'משחק רגיל, בלי תרגילים']].map(([v,l])=>`<button class="chip" data-m="${v}" aria-pressed="${setup.math===v}">${l}</button>`).join('');
+  $('#mathOpts').hidden=!setup.math;
+  $('#levelChips').innerHTML=LEVELS.map(([v,l])=>`<button class="chip" data-l="${v}" aria-pressed="${setup.level===v}">${l}</button>`).join('');
+  $('#wrongChips').innerHTML=WRONG.map(([v,l])=>`<button class="chip" data-w="${v}" aria-pressed="${setup.wrong===v}">${l}</button>`).join('');
+  renderCards();
+}
+function renderCards(){
+  $('#playerCards').innerHTML=setup.players.map((p,i)=>{
+    const taken=setup.players.filter((_,j)=>j!==i).map(q=>q.ch);
+    return `<div class="pcard">
+      <div class="top"><span class="me" style="border-color:${COLORS[i]};background:#fff">${CHARACTERS[p.ch][0]}</span>
+      <input id="pname-${i}" data-i="${i}" maxlength="14" value="${esc(p.name)}" aria-label="שם משתתף ${i+1}"></div>
+      <div class="chars">${CHARACTERS.map(([e,n],c)=>`<button data-i="${i}" data-c="${c}" title="${n}" aria-label="${n}" aria-pressed="${p.ch===c}" ${taken.includes(c)?'disabled':''}>${e}</button>`).join('')}</div>
+    </div>`}).join('');
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+$('#countChips').onclick=e=>{const b=e.target.closest('[data-n]');if(!b)return;
+  const n=+b.dataset.n; setup.count=n;
+  while(setup.players.length<n){const used=setup.players.map(p=>p.ch);const free=CHARACTERS.findIndex((_,c)=>!used.includes(c));setup.players.push({name:'שחקן '+(setup.players.length+1),ch:free})}
+  setup.players.length=n; renderSetup()};
+$('#sizeChips').onclick=e=>{const b=e.target.closest('[data-s]');if(b){setup.size=+b.dataset.s;renderSetup()}};
+$('#mathChips').onclick=e=>{const b=e.target.closest('[data-m]');if(b){setup.math=b.dataset.m==='true';renderSetup()}};
+$('#levelChips').onclick=e=>{const b=e.target.closest('[data-l]');if(b){setup.level=+b.dataset.l;renderSetup()}};
+$('#wrongChips').onclick=e=>{const b=e.target.closest('[data-w]');if(b){setup.wrong=b.dataset.w;renderSetup()}};
+$('#playerCards').addEventListener('input',e=>{if(e.target.dataset.i!=null)setup.players[+e.target.dataset.i].name=e.target.value});
+$('#playerCards').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b||b.disabled)return;setup.players[+b.dataset.i].ch=+b.dataset.c;renderCards()});
+$('#startBtn').onclick=()=>startGame();
+
+/* ---------- board geometry ---------- */
+// The board stretches to fill its box, so cells may be wider than tall. Drawing units: the shorter cell side is 100,
+// U.cw × U.ch is one cell, and the SVG viewBox keeps the board's real proportions so snakes never distort.
+const U={cw:100,ch:100};
+function center(n){const C=G.cols,R=G.rows,r=Math.floor((n-1)/C),c=(n-1)%C,x=r%2===0?C-1-c:c;return{x:(x+.5)*U.cw,y:(R-1-r+.5)*U.ch}}
+const rowOf=(n,C=G.cols)=>Math.floor((n-1)/C);
+const inLastRow=pos=>pos>G.size-G.cols;
+const diceCount=p=>inLastRow(p.pos)?1:3;
+function measure(){
+  const b=$('#board'),W=b.clientWidth/G.cols,H=b.clientHeight/G.rows,m=Math.min(W,H)||1;
+  U.cw=100*W/m;U.ch=100*H/m;
+  b.style.setProperty('--cell',m+'px');
+  $('#overlay').setAttribute('viewBox',`0 0 ${G.cols*U.cw} ${G.rows*U.ch}`);
+}
+let needRedraw=false;
+function redraw(){if(!G||$('#game').hidden)return;if(busy){needRedraw=true;return}needRedraw=false;measure();drawOverlay();layoutTokens()}
+new ResizeObserver(()=>redraw()).observe($('#board'));
+
+function genBoard(S,C){
+  const extra=S/100*5,maxLen=Math.round(S*.42);
+  for(let attempt=0;attempt<300;attempt++){
+    const used=new Set([1,2,10,S-2,S-1,S]);
+    const snakes=[{from:S-2,to:2}],ladders=[{from:10,to:S-1}];
+    const place=(list,isSnake)=>{
+      for(let t=0;t<1200&&list.length<extra+1;t++){
+        let a,b;
+        if(isSnake){a=rand(14,S-3);b=a-rand(9,maxLen);if(b<4)continue}
+        else{a=rand(4,S-14);b=a+rand(9,maxLen);if(b>S-3)continue}
+        if(rowOf(a,C)===rowOf(b,C)||used.has(a)||used.has(b)||used.has(a+1)&&used.has(a-1))continue;
+        used.add(a);used.add(b);list.push({from:a,to:b});
+      }
+      return list.length===extra+1;
+    };
+    if(place(snakes,true)&&place(ladders,false))return{snakes,ladders};
+  }
+}
+
+function buildCells(){
+  const hues=[45,165,205,330,90,20,262,185,350,130],C=G.cols,R=G.rows,S=G.size,board=$('#board');
+  board.style.setProperty('--cols',C);board.style.setProperty('--rows',R);
+  let html='';
+  for(let gy=0;gy<R;gy++)for(let gx=0;gx<C;gx++){
+    const r=R-1-gy,c=r%2===0?C-1-gx:gx,n=r*C+c+1,h=hues[r%10],lt=(gx+gy)%2?88:80;
+    html+=`<div class="cell${n===S?' goal':''}" id="c${n}" style="background:hsl(${h} 70% ${lt}%)">${n===S?'':n}</div>`;
+  }
+  $('#cells').innerHTML=html;
+}
+
+function snakeD(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,px=-uy,py=ux;
+  const waves=Math.max(1.5,L/230),amp=Math.min(36,16+L/28),N=Math.max(10,Math.round(L/25)),pts=[];
+  for(let i=0;i<=N;i++){const t=i/N,env=Math.pow(Math.sin(Math.PI*t),.5),o=Math.sin(t*Math.PI*2*waves)*amp*env;
+    pts.push([a.x+dx*t+px*o,a.y+dy*t+py*o])}
+  let d=`M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i=1;i<N;i++){const m=[(pts[i][0]+pts[i+1][0])/2,(pts[i][1]+pts[i+1][1])/2];d+=` Q${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)}`}
+  return d+` L${pts[N][0].toFixed(1)} ${pts[N][1].toFixed(1)}`;
+}
+function drawOverlay(){
+  let s='';
+  G.ladders.forEach(l=>{
+    const a=center(l.from),b=center(l.to),dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),px=-dy/L*20,py=dx/L*20;
+    let g='';
+    for(let d=34;d<L-20;d+=46){const t=d/L,cx=a.x+dx*t,cy=a.y+dy*t;g+=`<line x1="${cx-px}" y1="${cy-py}" x2="${cx+px}" y2="${cy+py}"/>`}
+    s+=`<g transform="translate(4 6)" stroke="rgba(30,15,60,.25)" stroke-width="10" stroke-linecap="round"><line x1="${a.x-px}" y1="${a.y-py}" x2="${b.x-px}" y2="${b.y-py}"/><line x1="${a.x+px}" y1="${a.y+py}" x2="${b.x+px}" y2="${b.y+py}"/></g>
+      <g stroke="#c98a4b" stroke-width="7" stroke-linecap="round">${g}</g>
+      <g stroke="#7a4520" stroke-width="10" stroke-linecap="round"><line x1="${a.x-px}" y1="${a.y-py}" x2="${b.x-px}" y2="${b.y-py}"/><line x1="${a.x+px}" y1="${a.y+py}" x2="${b.x+px}" y2="${b.y+py}"/></g>`;
+  });
+  G.snakes.forEach((sn,i)=>{
+    const a=center(sn.from),b=center(sn.to),d=snakeD(a,b),[c1,c2,c3]=SNAKE_COLORS[i%SNAKE_COLORS.length];
+    const ang=Math.atan2(a.y-b.y,a.x-b.x)*180/Math.PI;
+    s+=`<path d="${d}" fill="none" stroke="rgba(30,15,60,.25)" stroke-width="26" stroke-linecap="round" transform="translate(4 6)"/>
+      <path d="${d}" fill="none" stroke="${c3}" stroke-width="27" stroke-linecap="round"/>
+      <path id="snake${i}" d="${d}" fill="none" stroke="${c1}" stroke-width="21" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="${c2}" stroke-width="9" stroke-linecap="round" stroke-dasharray="1 24"/>
+      <g transform="translate(${a.x} ${a.y}) rotate(${ang})">
+        <path d="M22 0 L40 0 M40 0 L47 -5 M40 0 L47 5" stroke="#e01e37" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="4" cy="0" rx="25" ry="20" fill="${c1}" stroke="${c3}" stroke-width="3"/>
+        <circle cx="10" cy="-9" r="6.5" fill="#fff"/><circle cx="10" cy="9" r="6.5" fill="#fff"/>
+        <circle cx="12" cy="-9" r="3.2" fill="#1a1530"/><circle cx="12" cy="9" r="3.2" fill="#1a1530"/>
+      </g>`;
+  });
+  $('#overlay').innerHTML=s;
+}
+
+/* ---------- tokens ---------- */
+function tokenEl(i){return document.getElementById('tok'+i)}
+function setTokenAt(i,x,y){const el=tokenEl(i);el.style.left=x/(G.cols*U.cw)*100+'%';el.style.top=y/(G.rows*U.ch)*100+'%'}
+function layoutTokens(){
+  const groups={};
+  G.players.forEach((p,i)=>(groups[p.pos]??=[]).push(i));
+  Object.entries(groups).forEach(([pos,ids])=>{
+    const c=center(+pos);
+    ids.forEach((i,k)=>{const n=ids.length,r=n>1?22:0,a=-Math.PI/2+k*2*Math.PI/n;setTokenAt(i,c.x+Math.cos(a)*r,c.y+Math.sin(a)*r)});
+  });
+  G.players.forEach((_,i)=>tokenEl(i).classList.toggle('current',i===G.cur));
+}
+function buildTokens(){
+  $('#tokens').innerHTML=G.players.map((p,i)=>`<div class="token" id="tok${i}" style="border-color:${p.color}" title="${esc(p.name)}">${CHARACTERS[p.ch][0]}</div>`).join('');
+  layoutTokens();
+}
+
+/* ---------- sound ---------- */
+function beep(f,d=.08,type='triangle',vol=.12){
+  if(!sound)return;
+  try{audio??=new (window.AudioContext||window.webkitAudioContext)();
+    const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;
+    g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);
+    o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch(e){}
+}
+$('#soundBtn').onclick=()=>{sound=!sound;$('#soundBtn').textContent='צלילים: '+(sound?'פועלים':'כבויים')};
+
+/* ---------- dice ---------- */
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function dieHTML(v){return Array.from({length:9},(_,k)=>`<i class="${PIPS[v].includes(k)?'on':''}"></i>`).join('')}
+function renderDice(vals){$('#dice').innerHTML=vals.map(v=>`<div class="die" aria-label="${v}">${dieHTML(v)}</div>`).join('')}
+async function rollDice(){
+  const dice=[...document.querySelectorAll('.die')];
+  dice.forEach(d=>d.classList.add('roll'));
+  for(let k=0;k<9;k++){dice.forEach(d=>d.innerHTML=dieHTML(rand(1,6)));beep(300+rand(0,200),.03,'square',.04);await sleep(70)}
+  const vals=dice.map(()=>rand(1,6));
+  dice.forEach((d,k)=>{d.classList.remove('roll');d.innerHTML=dieHTML(vals[k]);d.setAttribute('aria-label',vals[k])});
+  return vals;
+}
+
+/* ---------- movement ---------- */
+async function walk(i,from,to){
+  const p=G.players[i],el=tokenEl(i),dir=to>from?1:-1;
+  el.classList.add('moving');
+  for(let n=from+dir;dir>0?n<=to:n>=to;n+=dir){
+    p.pos=n;const c=center(n);setTokenAt(i,c.x,c.y);
+    el.classList.remove('hop');void el.offsetWidth;el.classList.add('hop');
+    beep(dir>0?520+(n%10)*25:380,.07);
+    await sleep(270);
+  }
+  el.classList.remove('moving','hop');
+}
+async function slide(i,from,to,isSnake,snakeIdx){
+  const el=tokenEl(i);el.classList.add('moving');el.style.transition='none';
+  const dur=reduced?60:Math.max(900,Math.abs(to-from)*22);
+  const a=center(from),b=center(to),path=isSnake?document.getElementById('snake'+snakeIdx):null,len=path?path.getTotalLength():0;
+  const t0=performance.now();
+  await new Promise(res=>{const step=now=>{
+    let t=Math.min(1,(now-t0)/dur);const e=isSnake?t:(t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2);
+    if(path){const pt=path.getPointAtLength(e*len);setTokenAt(i,pt.x,pt.y)}else setTokenAt(i,a.x+(b.x-a.x)*e,a.y+(b.y-a.y)*e);
+    if(t<1)requestAnimationFrame(step);else res()};requestAnimationFrame(step)});
+  if(isSnake){beep(520,.15,'sawtooth',.06);setTimeout(()=>beep(300,.25,'sawtooth',.06),120)}
+  else{[520,660,780,1040].forEach((f,k)=>setTimeout(()=>beep(f,.1),k*80))}
+  G.players[i].pos=to;el.style.transition='';el.classList.remove('moving');
+}
+
+/* ---------- exercise ---------- */
+function makeExercise(){
+  const lv=G.level;let a,b;
+  if(lv===10){a=rand(1,9);b=rand(1,10-a)}
+  else if(lv===20){a=rand(2,18);b=rand(1,20-a)}
+  else{a=rand(10,89);b=rand(2,99-a)}
+  return{a,b};
+}
+function askExercise(i,square){
+  const p=G.players[i],{a,b}=makeExercise();let typed='';
+  return new Promise(resolve=>{
+    const root=$('#modalRoot');
+    root.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="qh"><div class="sheet">
+      <div class="who" style="justify-content:center"><span class="me" style="border-color:${p.color}">${CHARACTERS[p.ch][0]}</span>
+      <div class="t"><small id="qh">${esc(p.name)} נחת/ה במשבצת ${square}</small><b>תרגיל חיבור</b></div></div>
+      <div class="eq"><span>${a}</span><span>+</span><span>${b}</span><span>=</span><span class="ans" id="ans">?</span></div>
+      <div class="feedback" id="fb" aria-live="polite"></div>
+      <div class="pad" id="pad">${[7,8,9,4,5,6,1,2,3].map(n=>`<button data-k="${n}">${n}</button>`).join('')}
+        <button data-k="del" aria-label="מחיקה">⌫</button><button data-k="0">0</button><button data-k="ok" class="go" aria-label="בדיקה">✓</button></div>
+    </div></div>`;
+    const ans=$('#ans'),fb=$('#fb');let locked=false;
+    const show=()=>{ans.textContent=typed||'?';ans.className='ans'};
+    const finish=ok=>{document.removeEventListener('keydown',onKey);setTimeout(()=>{root.innerHTML='';resolve(ok)},ok?900:1900)};
+    const press=k=>{
+      if(locked)return;
+      if(k==='del'){typed=typed.slice(0,-1);show();return}
+      if(k==='ok'){
+        if(!typed)return;
+        if(+typed===a+b){locked=true;ans.className='ans ok';fb.innerHTML=`<span style="color:var(--good)">נכון מאוד! 🎉</span>`;[660,880,1100].forEach((f,k)=>setTimeout(()=>beep(f,.12),k*90));finish(true)}
+        else if(G.wrong==='retry'){ans.className='ans no shake';beep(180,.25,'square',.06);fb.innerHTML=`<span style="color:var(--bad)">לא בדיוק. נסו שוב</span>`;
+          setTimeout(()=>{typed='';show()},650)}
+        else{locked=true;ans.className='ans no shake';beep(180,.3,'square',.06);fb.innerHTML=`<span style="color:var(--bad)">התשובה הנכונה: ${a+b}. חוזרים אחורה</span>`;finish(false)}
+        return;
+      }
+      if(typed.length<3){typed+=k;show()}
+    };
+    $('#pad').onclick=e=>{const btn=e.target.closest('[data-k]');if(btn)press(btn.dataset.k)};
+    const onKey=e=>{if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('del');else if(e.key==='Enter'){e.preventDefault();press('ok')}};
+    document.addEventListener('keydown',onKey);
+    $('#pad [data-k="ok"]').focus();
+  });
+}
+
+/* ---------- turn flow ---------- */
+function addLog(t){G.log.unshift(t);G.log.length=Math.min(G.log.length,6);$('#log').innerHTML=G.log.map(l=>`<li>${l}</li>`).join('')}
+function renderSide(){
+  const p=G.players[G.cur];
+  $('#who').innerHTML=`<span class="me" style="border-color:${p.color}">${CHARACTERS[p.ch][0]}</span><div class="t"><small>התור של</small><b>${esc(p.name)}</b></div>`;
+  const n=diceCount(p);
+  if(document.querySelectorAll('.die').length!==n)renderDice(n===1?[1]:[1,2,3]);
+  $('#diceNote').hidden=n!==1;
+  $('#players').innerHTML=G.players.map((q,i)=>`<div class="prow${i===G.cur?' cur':''}"><span class="me" style="border-color:${q.color}">${CHARACTERS[q.ch][0]}</span><span class="n">${esc(q.name)}</span><span class="p">משבצת ${q.pos}</span></div>`).join('');
+}
+function markHot(n,on){const c=document.getElementById('c'+n);if(c)c.classList.toggle('hot',on)}
+
+async function playTurn(){
+  if(busy||!G)return;busy=true;$('#rollBtn').disabled=true;
+  const i=G.cur,p=G.players[i],nm=esc(p.name);
+  const vals=await rollDice(),sum=vals.reduce((s,v)=>s+v,0);
+  const triple=vals.length===3&&vals[0]===vals[1]&&vals[1]===vals[2];
+  $('#sum').innerHTML=(vals.length>1?`${vals.join(' + ')} = `:'')+`<em>${sum}</em>`+(triple?'<span class="triple">טריפל! תור נוסף</span>':'');
+  if(triple){addLog(`טריפל ל־${nm}! מקבל/ת תור נוסף`);[784,988,1175].forEach((f,k)=>setTimeout(()=>beep(f,.12),k*90))}
+  await sleep(triple?900:350);
+  const S=G.size,start=p.pos,raw=start+sum,target=raw>S?2*S-raw:raw;
+  if(raw>S){
+    await walk(i,start,S);
+    addLog(`${nm} עבר/ה את ${S} ב־${raw-S}, חוזר/ת ${raw-S} אחורה`);
+    await sleep(250);await walk(i,S,target);
+  }else await walk(i,start,target);
+  renderSide();
+  if(target===S){layoutTokens();addLog(`${nm} נחת/ה בדיוק על ${S}!`);return celebrate(i)}
+  let ok=true;
+  if(G.math!==false){markHot(target,true);ok=await askExercise(i,target);markHot(target,false)}
+  if(!ok){addLog(`${nm}: טעות בתרגיל, חזרה ל־${start}`);await walk(i,target,start)}
+  else{
+    const sn=G.snakes.findIndex(s=>s.from===target),ld=G.ladders.find(l=>l.from===target);
+    if(ld){addLog(`${nm} טיפס/ה בסולם מ־${target} ל־${ld.to}`);await slide(i,target,ld.to,false)}
+    else if(sn>=0){addLog(`${nm} החליק/ה בנחש מ־${target} ל־${G.snakes[sn].to}`);await slide(i,target,G.snakes[sn].to,true,sn)}
+    else addLog(G.math!==false?`${nm} פתר/ה ונשאר/ה במשבצת ${target}`:`${nm} נחת/ה במשבצת ${target}`);
+  }
+  if(!triple)G.cur=(G.cur+1)%G.players.length;
+  layoutTokens();renderSide();
+  busy=false;$('#rollBtn').disabled=false;$('#rollBtn').focus();
+  if(needRedraw)redraw();
+}
+$('#rollBtn').onclick=playTurn;
+
+function celebrate(i){
+  const p=G.players[i];
+  [523,659,784,1047,784,1047].forEach((f,k)=>setTimeout(()=>beep(f,.18),k*140));
+  const conf=document.createElement('div');conf.className='confetti';
+  conf.innerHTML=Array.from({length:reduced?0:80},()=>`<i style="left:${rand(0,100)}%;background:${COLORS[rand(0,4)]};animation-duration:${rand(18,40)/10}s;animation-delay:${rand(0,10)/10}s"></i>`).join('');
+  document.body.appendChild(conf);setTimeout(()=>conf.remove(),6000);
+  $('#modalRoot').innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="sheet win">
+    <div class="champ">${CHARACTERS[p.ch][0]}</div><h2>ניצחון ל־${esc(p.name)}!</h2>
+    <p style="margin:0;color:var(--muted)">הגיע/ה ראשון/ה למשבצת ${G.size}</p>
+    <button class="big" id="againBtn">עוד משחק, לוח חדש</button><button class="ghost" id="toSetupBtn">שינוי שחקנים</button></div></div>`;
+  $('#againBtn').onclick=()=>{$('#modalRoot').innerHTML='';startGame(true)};
+  $('#toSetupBtn').onclick=()=>{$('#modalRoot').innerHTML='';showSetup()};
+}
+
+function startGame(same){
+  // A 200 board lies wide (20×10) on a landscape screen, tall (10×20) on a portrait one.
+  $('#setup').hidden=true;$('#game').hidden=false;
+  const wrap=$('.board-wrap'),wide=wrap.clientWidth>=wrap.clientHeight;
+  const cols=setup.size===200&&wide?20:10,rows=setup.size/cols;
+  const b=genBoard(setup.size,cols);
+  G={size:setup.size,cols,rows,players:setup.players.map((p,i)=>({name:(p.name||'').trim()||CHARACTERS[p.ch][1],ch:p.ch,color:COLORS[i],pos:1})),
+     cur:0,snakes:b.snakes,ladders:b.ladders,level:setup.level,wrong:setup.wrong,math:setup.math,log:[]};
+  mountGame();addLog('המשחק התחיל. בהצלחה!');
+}
+function mountGame(){
+  busy=false;
+  $('#setup').hidden=true;$('#game').hidden=false;
+  buildCells();measure();drawOverlay();buildTokens();$('#dice').innerHTML='';$('#sum').textContent='';renderSide();
+  $('#log').innerHTML=G.log.map(l=>`<li>${l}</li>`).join('');
+  $('#rollBtn').disabled=false;
+}
+function showSetup(){G=null;busy=false;$('#game').hidden=true;$('#setup').hidden=false;renderSetup()}
+$('#newBoardBtn').onclick=()=>{if(!busy)startGame(true)};
+$('#setupBtn').onclick=()=>{if(!busy)showSetup()};
+
+/* ---------- boot (keeps a game in progress across live updates) ---------- */
+window.claude?.hot?.snapshot?.(()=>({setup,G:busy?null:G}));
+function boot(data){
+  if(data?.setup)setup={math:true,size:100,...data.setup};
+  renderSetup();
+  if(data?.G){const s=data.G.size||100;G={size:s,cols:10,rows:s/10,...data.G};mountGame()}
+}
+window.claude?.hot?.ready?window.claude.hot.ready(boot):boot(window.claude?.hot?.data??{});
+</script>
+
+</body></html>
