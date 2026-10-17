@@ -459,6 +459,8 @@ const BAD_DELAY = 1200;
 let pendingText = '';   // finals still waiting to be judged, kept so the next fragment can complete them
 function handleResult(alternatives, isFinal) {
   if (locked || !running) return;
+  alternatives = alternatives.map(t => t.trim()).filter(Boolean);
+  if (!alternatives.length) return;   // Android sends empty finals between segments: they mean nothing was said
   const tries = pendingText ? [...alternatives, ...alternatives.map(t => pendingText + ' ' + t)] : alternatives;
   const nums = tries.flatMap(parseNumbers);
   if (nums.includes(ans)) return correct();   // the right answer counts the moment it's heard, even mid-sentence
