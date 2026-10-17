@@ -318,11 +318,6 @@ try {   // boards from before the picker move to their matching combination, onc
 } catch {}
 function loadBoard(key = boardKey()) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
 function saveBoard(list) { try { localStorage.setItem(boardKey(), JSON.stringify(list)); } catch {} }
-function allBoardKeys() {
-  const keys = [];
-  try { for (let i = 0; i < localStorage.length; i++) if (localStorage.key(i).startsWith('board:')) keys.push(localStorage.key(i)); } catch {}
-  return keys;
-}
 function renderBoard() {
   const list = loadBoard(), ol = $('board');
   $('boardTitle').textContent = `🏆 שיאים – ${comboName()}`;
@@ -548,13 +543,21 @@ async function keepAwake(on) {
 function loadPlayers() {
   let list = [];
   try { list = JSON.parse(localStorage.getItem('mult-players') || '[]'); } catch {}
-  const onBoards = new Set(allBoardKeys().flatMap(k => loadBoard(k).map(e => e.name)));
-  for (const n of onBoards) if (!list.includes(n)) list.push(n);   // older games kept only on the board
-  // "תומר" used to be offered to everyone and got saved with the other players; keep him only if he really played
-  return list.filter(n => n !== 'תומר' || onBoards.has(n) || n in playerModes());
+  return list.slice(0, PLAYER_CHIPS);   // only names that started a round on this device, most recent first
 }
+const PLAYER_CHIPS = 4;
+try {   // once: "תומר" used to be offered to everyone and got saved on every device as if he had played
+  if (!localStorage.getItem('mult-players-v2')) {
+    const list = JSON.parse(localStorage.getItem('mult-players') || '[]').filter(n => n !== 'תומר');
+    localStorage.setItem('mult-players', JSON.stringify(list));
+    const modes = JSON.parse(localStorage.getItem('mult-player-mode') || '{}');
+    delete modes['תומר'];
+    localStorage.setItem('mult-player-mode', JSON.stringify(modes));
+    localStorage.setItem('mult-players-v2', '1');
+  }
+} catch {}
 function rememberPlayer(name) {
-  const list = [name, ...loadPlayers().filter(n => n !== name)].slice(0, 30);
+  const list = [name, ...loadPlayers().filter(n => n !== name)].slice(0, PLAYER_CHIPS);
   try { localStorage.setItem('mult-players', JSON.stringify(list)); } catch {}
 }
 function playerModes() { try { return JSON.parse(localStorage.getItem('mult-player-mode') || '{}'); } catch { return {}; } }
