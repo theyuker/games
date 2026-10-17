@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#6c4cf5">
 <meta name="mobile-web-app-capable" content="yes">
-<title>לוח הכפל בקול</title>
+<title>מרוץ החשבון</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -55,6 +55,25 @@
           background:#fff; color:var(--ink); cursor:pointer; flex:1; max-width:200px; }
   .mode small { display:block; font-size:13px; font-weight:400; color:var(--muted); }
   .mode.on { border-color:var(--purple); background:#f3efff; box-shadow:0 0 0 3px #6c4cf533; }
+  .ops { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:520px; margin:0 auto 6px; }
+  .op { position:relative; font:inherit; font-size:18px; font-weight:600; padding:10px 4px; border-radius:18px; border:4px solid #e9e5f7;
+        background:#fff; color:var(--muted); cursor:pointer; transition:transform .1s; }
+  .op b { display:block; font-size:30px; line-height:1.2; filter:grayscale(1); opacity:.55; }
+  .op:active { transform:scale(.95); }
+  .op.on { border-color:var(--c); background:var(--t); color:var(--ink); box-shadow:0 6px 14px rgba(40,20,120,.15); }
+  .op.on b { filter:none; opacity:1; }
+  .op.on::after { content:'✓'; position:absolute; top:-10px; left:-10px; width:26px; height:26px; border-radius:50%;
+                  background:var(--c); color:#fff; font-size:16px; font-weight:800; line-height:26px; }
+  .range { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .stepper { display:flex; align-items:center; gap:6px; background:#f6f4ff; border-radius:18px; padding:6px 10px; direction:ltr; }
+  .stepper span { color:var(--muted); font-size:16px; order:9; margin-left:4px; }
+  .stepper button { font:inherit; font-size:26px; font-weight:800; width:44px; height:44px; border-radius:14px; border:0; cursor:pointer;
+                    color:#fff; background:linear-gradient(135deg,#9b8cff,var(--purple)); box-shadow:0 3px 0 #4b33b8; }
+  .stepper button:active { transform:translateY(2px); box-shadow:0 1px 0 #4b33b8; }
+  .stepper b { min-width:40px; text-align:center; font-size:28px; font-weight:800; }
+  .presets { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0 18px; }
+  .presets .chip { font-size:15px; padding:6px 14px; direction:ltr; }
+  .question.long { font-size:64px; }
   .players-label { color:var(--muted); font-size:15px; margin:16px 0 8px; }
   .players { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:460px; margin:0 auto; }
   .chip { font:inherit; font-size:17px; padding:8px 16px; border-radius:999px; border:2px solid #e3dcff; background:#f6f4ff;
@@ -137,7 +156,11 @@
     .timer { width:88px; height:88px; } .timer svg { width:88px; height:88px; } .timer .t { font-size:30px; }
     .stat b { font-size:30px; } .stat { min-width:60px; }
     .qbox { margin:14px 0 8px; padding:20px 6px; }
-    .question { font-size:clamp(44px, 15vw, 60px); }
+    .question { font-size:clamp(44px, 15vw, 60px); } .question.long { font-size:clamp(32px, 11vw, 44px); }
+    .ops { gap:7px; } .op { font-size:15px; padding:8px 2px; } .op b { font-size:26px; }
+    .range { gap:8px; } .stepper { padding:5px 6px; gap:4px; } .stepper span { font-size:14px; margin-left:2px; }
+    .stepper button { width:38px; height:38px; font-size:22px; } .stepper b { min-width:32px; font-size:24px; }
+    .modes { gap:8px; } .mode { font-size:17px; padding:10px 8px; }
     .feedback { font-size:23px; min-height:36px; } .heard { font-size:17px; }
     .big { font-size:76px; } .record { font-size:26px; }
     .board h2 { font-size:22px; } .board li { font-size:16px; padding:7px 10px; }
@@ -148,22 +171,34 @@
 <div class="layout">
   <main class="panel">
     <h1>מרוץ החשבון 🚀</h1>
-    <div class="sub">כמה תרגילים תספיק לפתור בדקה אחת?</div>
+    <div class="sub">כפל, חילוק, חיבור וחיסור – עונים בקול!</div>
 
     <!-- intro -->
     <section class="intro" id="intro">
       <div class="rules">
-        <div class="rule"><span>⏱️</span>יש לך 60 שניות</div>
+        <div class="rule"><span>⏱️</span>60 שניות או בלי זמן</div>
         <div class="rule"><span>🎤</span>עונים בקול</div>
         <div class="rule"><span>🏆</span>שוברים את השיא!</div>
       </div>
       <div class="players-label">מה משחקים?</div>
-      <div class="modes">
-        <button class="mode" data-mode="mul">✖️ כפל<small>מכפול 1 עד כפול 10</small></button>
-        <button class="mode" data-mode="add">➕ חיבור<small>מספרים בין 2 ל-7</small></button>
-        <button class="mode" data-mode="add6">➕ חיבור<small>מספרים עד 6</small></button>
+      <div class="ops">
+        <button class="op" data-op="mul" style="--c:#6c4cf5;--t:#f1edff"><b>✖️</b>כפל</button>
+        <button class="op" data-op="div" style="--c:#ff4f8b;--t:#ffeaf2"><b>➗</b>חילוק</button>
+        <button class="op" data-op="add" style="--c:#18c27a;--t:#e3f8ee"><b>➕</b>חיבור</button>
+        <button class="op" data-op="sub" style="--c:#ff9f1c;--t:#fff2df"><b>➖</b>חיסור</button>
       </div>
-      <div class="modes" id="timingBox" hidden>
+      <div class="players-label">טווח מספרים</div>
+      <div class="range">
+        <div class="stepper"><span dir="rtl">מ-</span><button data-end="lo" data-step="-1" aria-label="פחות">−</button><b id="loVal">0</b><button data-end="lo" data-step="1" aria-label="יותר">+</button></div>
+        <div class="stepper"><span dir="rtl">עד</span><button data-end="hi" data-step="-1" aria-label="פחות">−</button><b id="hiVal">10</b><button data-end="hi" data-step="1" aria-label="יותר">+</button></div>
+      </div>
+      <div class="presets">
+        <button class="chip preset" data-range="0-10">0–10</button>
+        <button class="chip preset" data-range="1-10">1–10</button>
+        <button class="chip preset" data-range="5-15">5–15</button>
+        <button class="chip preset" data-range="0-20">0–20</button>
+      </div>
+      <div class="modes" id="timingBox">
         <button class="mode timing" data-untimed="0">⏱️ על זמן<small>דקה אחת, נכנס לטבלה</small></button>
         <button class="mode timing" data-untimed="1">♾️ בלי זמן<small>תרגול חופשי</small></button>
       </div>
@@ -242,26 +277,55 @@
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const $ = id => document.getElementById(id);
 const GAME_SECONDS = 60, RING = 351.86, BOARD_SIZE = 10;
-const MODES = {
-  mul: { name: 'כפל',   sym: '×', min: 1, max: 10, board: 'mult-board', calc: (x, y) => x * y },
-  add: { name: 'חיבור', sym: '+', min: 2, max: 7,  board: 'add-board',  calc: (x, y) => x + y },
-  add6: { name: 'חיבור עד 6', sym: '+', min: 1, max: 6, board: 'add6-board', calc: (x, y) => x + y },
+const RANGE_MAX = 20;
+// both numbers of every question come from the chosen range [lo, hi]
+const OPS = {
+  mul: { name: 'כפל',   sym: '×', make: (x, y) => [x, y, x * y] },
+  div: { name: 'חילוק', sym: '÷' },                                       // built in makeQuestion
+  add: { name: 'חיבור', sym: '+', make: (x, y) => [x, y, x + y] },
+  sub: { name: 'חיסור', sym: '−', make: (x, y) => [Math.max(x, y), Math.min(x, y), Math.abs(x - y)] },   // never negative
 };
-const FIXED_PLAYERS = ['תומר'];   // always offered on the start screen
-let mode = 'mul';
-let untimed = false;   // free practice: no clock, not saved to the board (addition only)
-try { untimed = localStorage.getItem('mult-untimed') === '1'; } catch {}
-const isUntimed = () => untimed && mode !== 'mul';
-try { if (MODES[localStorage.getItem('mult-mode')]) mode = localStorage.getItem('mult-mode'); } catch {}
-const answerOf = () => MODES[mode].calc(a, b);
-let a, b, rec, running = false, locked = false, right = 0, wrong = 0, streak = 0, last = '', endAt = 0, myEntry = null;
+const OP_ORDER = ['mul', 'div', 'add', 'sub'];
+// settings = { ops, lo, hi, untimed }; untimed = free practice: no clock, not saved to the board
+const DEFAULT_SETTINGS = { ops: ['mul'], lo: 0, hi: 10, untimed: false };
+const OLD_MODES = { mul: { ops: ['mul'], lo: 1, hi: 10 }, add: { ops: ['add'], lo: 2, hi: 7 }, add6: { ops: ['add'], lo: 1, hi: 6 } };
+const OLD_BOARDS = { 'mult-board': OLD_MODES.mul, 'add-board': OLD_MODES.add, 'add6-board': OLD_MODES.add6 };
+function cleanSettings(s) {
+  if (typeof s === 'string') s = OLD_MODES[s];                                       // saved before the picker existed
+  else if (s && s.mode) s = { ...OLD_MODES[s.mode], untimed: s.mode !== 'mul' && !!s.untimed };
+  if (!s || typeof s !== 'object') return null;
+  const ops = OP_ORDER.filter(o => (s.ops || []).includes(o));
+  const lo = Math.min(RANGE_MAX, Math.max(0, s.lo | 0)), hi = Math.min(RANGE_MAX, Math.max(0, s.hi | 0));
+  return ops.length ? { ops, lo: Math.min(lo, hi), hi: Math.max(lo, hi), untimed: !!s.untimed } : null;
+}
+let settings = DEFAULT_SETTINGS;
+try {
+  settings = cleanSettings(JSON.parse(localStorage.getItem('mult-settings') || 'null'))
+          || cleanSettings({ mode: localStorage.getItem('mult-mode') || 'mul', untimed: localStorage.getItem('mult-untimed') === '1' })
+          || DEFAULT_SETTINGS;
+} catch {}
+const isUntimed = () => settings.untimed;
+let a, b, ans, sym, rec, running = false, locked = false, right = 0, wrong = 0, streak = 0, last = '', endAt = 0, myEntry = null;
 
-// ---- leaderboard (kept in this browser) ----
-function loadBoard(m = mode) { try { return JSON.parse(localStorage.getItem(MODES[m].board) || '[]'); } catch { return []; } }
-function saveBoard(list) { try { localStorage.setItem(MODES[mode].board, JSON.stringify(list)); } catch {} }
+// ---- leaderboard (kept in this browser), one per combination of operations + range ----
+const boardKey = (s = settings) => `board:${[...s.ops].sort().join(',')}:${s.lo}-${s.hi}`;
+const comboName = (s = settings) => `${s.ops.map(o => OPS[o].name).join('+')}, ⁦${s.lo}–${s.hi}⁩`;   // isolate keeps "0–10" from flipping in RTL
+try {   // boards from before the picker move to their matching combination, once
+  for (const [oldKey, s] of Object.entries(OLD_BOARDS)) {
+    const data = localStorage.getItem(oldKey);
+    if (data && localStorage.getItem(boardKey(s)) === null) localStorage.setItem(boardKey(s), data);
+  }
+} catch {}
+function loadBoard(key = boardKey()) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
+function saveBoard(list) { try { localStorage.setItem(boardKey(), JSON.stringify(list)); } catch {} }
+function allBoardKeys() {
+  const keys = [];
+  try { for (let i = 0; i < localStorage.length; i++) if (localStorage.key(i).startsWith('board:')) keys.push(localStorage.key(i)); } catch {}
+  return keys;
+}
 function renderBoard() {
   const list = loadBoard(), ol = $('board');
-  $('boardTitle').textContent = `🏆 שיאים – ${MODES[mode].name}`;
+  $('boardTitle').textContent = `🏆 שיאים – ${comboName()}`;
   ol.innerHTML = '';
   if (!list.length) { ol.innerHTML = '<div class="empty">עוד אין שיאים.<br>תהיה הראשון! 🌟</div>'; return; }
   const medals = ['🥇','🥈','🥉'];
@@ -299,54 +363,83 @@ const WORDS = {
   'תשע':9,'תשעה':9,
   'עשר':10,'עשרה':10,
   'עשרים':20,'שלושים':30,'שלשים':30,'ארבעים':40,'חמישים':50,'חמשים':50,
-  'שישים':60,'ששים':60,'שבעים':70,'שמונים':80,'תשעים':90,'מאה':100
+  'שישים':60,'ששים':60,'שבעים':70,'שמונים':80,'תשעים':90,
+  'מאה':100,'מאתיים':200,'מאתים':200,'מאות':'00'   // "שלוש מאות" = unit × 100
 };
 // Every number said, kept apart: "שלוש שלוש" is [3, 3], not 6.
-// Words join into one number only as "עשרים ושלוש" (tens + ו + unit) or "שלוש עשרה" (unit + עשרה).
+// Words join into one number only the way Hebrew builds one: "עשרים ושלוש", "שלוש עשרה",
+// "שלוש מאות", and hundreds followed by the rest ("מאה עשרים ושלוש").
 const TEN_WORDS = ['עשר', 'עשרה'];
 function parseNumbers(text) {
   const nums = [];
+  let prevDigit = null;
   for (const d of text.match(/\d+/g) || []) {
-    nums.push(parseInt(d, 10));
+    const n = parseInt(d, 10);
+    nums.push(n);
     const rep = d.match(/^(\d+?)\1+$/);   // "3 3" can come back as "33"
     if (rep) nums.push(parseInt(rep[1], 10));
+    if (prevDigit !== null && n < 10 && prevDigit % 10 === 0 && prevDigit >= 20 && prevDigit < 100)
+      nums.push(prevDigit + n);           // a phone may split "24" into "20" and "4"
+    prevDigit = n;
   }
-  let cur = null, kind = null;
-  const flush = () => { if (cur !== null) nums.push(cur); cur = kind = null; };
+  let hund = null, cur = null, kind = null;
+  const flush = () => { if (hund !== null || cur !== null) nums.push((hund || 0) + (cur || 0)); hund = cur = kind = null; };
   for (let w of text.replace(/[^֐-׿\s]/g, ' ').split(/\s+/)) {
     if (!w) continue;
     let joined = false;
     if (!(w in WORDS) && w.startsWith('ו') && (w.slice(1) in WORDS)) { w = w.slice(1); joined = true; }
     if (!(w in WORDS)) { flush(); continue; }
     const v = WORDS[w];
-    if (TEN_WORDS.includes(w)) {
-      if (kind === 'unit') { cur += 10; flush(); } else { flush(); nums.push(10); }
+    if (v === '00') {
+      if (kind === 'unit' && hund === null) { hund = cur * 100; cur = null; kind = 'hund'; } else flush();
+    } else if (TEN_WORDS.includes(w)) {
+      if (kind === 'unit') { cur += 10; flush(); }
+      else if (kind === 'hund') { cur = 10; flush(); }
+      else { flush(); nums.push(10); }
     } else if (v < 10) {
       if (kind === 'tens' && joined) { cur += v; flush(); }
+      else if (kind === 'hund') { cur = v; kind = 'unit'; }
       else { flush(); cur = v; kind = 'unit'; }
-    } else if (v < 100) { flush(); cur = v; kind = 'tens'; }
-    else { flush(); nums.push(v); }
+    } else if (v < 100) {
+      if (kind === 'hund') { cur = v; kind = 'tens'; }
+      else { flush(); cur = v; kind = 'tens'; }
+    } else { flush(); hund = v; kind = 'hund'; }
   }
   flush();
   return nums;
 }
 
 // ---- game ----
+// division needs a divisor above 0, so a range of only 0 can't make one
+const playableOps = (s = settings) => s.ops.filter(o => o !== 'div' || s.hi > 0);
+function makeQuestion(s = settings) {
+  const rnd = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const ops = playableOps(s), op = ops[Math.floor(Math.random() * ops.length)];
+  if (op === 'div') {   // always whole: (divisor × quotient) ÷ divisor, both from the range
+    const d = rnd(Math.max(1, s.lo), s.hi), q = rnd(s.lo, s.hi);
+    return { op, a: d * q, b: d, ans: q };
+  }
+  const [x, y, r] = OPS[op].make(rnd(s.lo, s.hi), rnd(s.lo, s.hi));
+  return { op, a: x, b: y, ans: r };
+}
 function newQuestion() {
   if (!running) return;
-  let key;
-  const { min, max, sym } = MODES[mode], pick = () => min + Math.floor(Math.random() * (max - min + 1));
-  do { a = pick(); b = pick(); key = mode + a + 'x' + b; } while (key === last);
+  cancelPending();
+  let q, key, tries = 0;
+  do { q = makeQuestion(); key = q.op + q.a + ':' + q.b; } while (key === last && ++tries < 30);   // a tiny range may have only one question
   last = key;
-  const q = $('question');
-  q.textContent = `${a} ${sym} ${b} = ?`;
-  q.classList.remove('pop'); void q.offsetWidth; q.classList.add('pop');
+  ({ a, b, ans } = q); sym = OPS[q.op].sym;
+  const el = $('question');
+  el.textContent = `${a} ${sym} ${b} = ?`;
+  el.classList.toggle('long', el.textContent.length > 10);
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   $('heard').textContent = '';
   $('feedback').textContent = ''; $('feedback').className = 'feedback';
   locked = false;
 }
 
 let pendingTimer = null;
+function cancelPending() { clearTimeout(pendingTimer); pendingText = ''; }
 
 function textFromResult(r) {
   const alts = [];
@@ -359,18 +452,27 @@ function flash(cls) {
   box.classList.remove('good', 'bad'); void box.offsetWidth; box.classList.add(cls);
 }
 
+// Phones often split one answer into several final results ("20", then "24", or "עשרים" then "וארבע"),
+// so a final that isn't the answer only becomes a mistake if nothing better arrives within BAD_DELAY.
+// The right answer always counts at once.
+const BAD_DELAY = 1200;
+let pendingText = '';   // finals still waiting to be judged, kept so the next fragment can complete them
 function handleResult(alternatives, isFinal) {
   if (locked || !running) return;
+  const tries = pendingText ? [...alternatives, ...alternatives.map(t => pendingText + ' ' + t)] : alternatives;
+  const nums = tries.flatMap(parseNumbers);
+  if (nums.includes(ans)) return correct();   // the right answer counts the moment it's heard, even mid-sentence
+  if (!isFinal) return;                        // a half-heard wrong number shows nothing
   clearTimeout(pendingTimer);
-  const answer = answerOf();
-  const nums = alternatives.flatMap(parseNumbers);
-  if (!nums.length) {
-    if (isFinal) $('heard').textContent = `שמעתי: "${alternatives[0]}" – לא הבנתי מספר`;
-    return;
-  }
-  const ok = nums.includes(answer);
-  if (ok) return correct();   // the right answer counts the moment it's heard, even mid-sentence
-  if (!isFinal) { $('heard').textContent = `אמרת: ${nums[nums.length - 1]}`; return; }
+  pendingText = ((pendingText ? pendingText + ' ' : '') + alternatives[0]).trim();
+  const heardNums = alternatives.flatMap(parseNumbers);
+  pendingTimer = setTimeout(() => judgeWrong(heardNums, alternatives[0]), BAD_DELAY);
+}
+
+function judgeWrong(nums, text) {
+  pendingText = '';
+  if (locked || !running) return;
+  if (!nums.length) { $('heard').textContent = `שמעתי: "${text}" – לא הבנתי מספר`; return; }
   $('heard').textContent = `אמרת: ${nums[0]}`;
   wrong++; streak = 0; $('streak').textContent = 0;
   const fb = $('feedback');
@@ -381,8 +483,8 @@ function handleResult(alternatives, isFinal) {
 function correct() {
   if (locked || !running) return;
   locked = true;
-  clearTimeout(pendingTimer);
-  $('heard').textContent = `אמרת: ${answerOf()}`;
+  cancelPending();
+  $('heard').textContent = `אמרת: ${ans}`;
   right++; streak++;
   $('right').textContent = right; $('streak').textContent = streak;
   const fb = $('feedback');
@@ -444,29 +546,39 @@ async function keepAwake(on) {
 function loadPlayers() {
   let list = [];
   try { list = JSON.parse(localStorage.getItem('mult-players') || '[]'); } catch {}
-  for (const m in MODES) for (const e of loadBoard(m)) if (!list.includes(e.name)) list.push(e.name);   // older games kept only on the board
-  for (const n of FIXED_PLAYERS) if (!list.includes(n)) list.push(n);
-  return list;
+  const onBoards = new Set(allBoardKeys().flatMap(k => loadBoard(k).map(e => e.name)));
+  for (const n of onBoards) if (!list.includes(n)) list.push(n);   // older games kept only on the board
+  // "תומר" used to be offered to everyone and got saved with the other players; keep him only if he really played
+  return list.filter(n => n !== 'תומר' || onBoards.has(n) || n in playerModes());
 }
 function rememberPlayer(name) {
   const list = [name, ...loadPlayers().filter(n => n !== name)].slice(0, 30);
   try { localStorage.setItem('mult-players', JSON.stringify(list)); } catch {}
 }
 function playerModes() { try { return JSON.parse(localStorage.getItem('mult-player-mode') || '{}'); } catch { return {}; } }
-function setUntimed(u) {
-  untimed = u;
-  try { localStorage.setItem('mult-untimed', u ? '1' : '0'); } catch {}
-  setMode(mode);
-}
-function setMode(m) {
-  mode = m;
-  try { localStorage.setItem('mult-mode', m); } catch {}
-  document.querySelectorAll('.mode[data-mode]').forEach(btn => btn.classList.toggle('on', btn.dataset.mode === m));
-  $('timingBox').hidden = m === 'mul';
-  document.querySelectorAll('.timing').forEach(btn => btn.classList.toggle('on', (btn.dataset.untimed === '1') === untimed));
+function setSettings(changes) {
+  settings = cleanSettings({ ...settings, ...changes }) || settings;
+  try { localStorage.setItem('mult-settings', JSON.stringify(settings)); } catch {}
+  document.querySelectorAll('.op').forEach(btn => btn.classList.toggle('on', settings.ops.includes(btn.dataset.op)));
+  $('loVal').textContent = settings.lo; $('hiVal').textContent = settings.hi;
+  document.querySelectorAll('.preset').forEach(btn => btn.classList.toggle('on', btn.dataset.range === `${settings.lo}-${settings.hi}`));
+  document.querySelectorAll('.timing').forEach(btn => btn.classList.toggle('on', (btn.dataset.untimed === '1') === settings.untimed));
+  $('err').textContent = playableOps().length ? '' : 'בחילוק אי אפשר לחלק ב-0 – בחר טווח שמגיע לפחות עד 1';
   myEntry = null;
   renderBoard();
   renderPlayers();
+}
+function toggleOp(op) {
+  const on = settings.ops.includes(op);
+  if (on && settings.ops.length === 1) return;   // at least one stays chosen
+  setSettings({ ops: on ? settings.ops.filter(o => o !== op) : [...settings.ops, op] });
+}
+// moving one end past the other drags it along, so "from" never ends up above "to"
+function stepRange(end, delta) {
+  let { lo, hi } = settings;
+  if (end === 'lo') { lo = Math.min(RANGE_MAX, Math.max(0, lo + delta)); hi = Math.max(hi, lo); }
+  else { hi = Math.min(RANGE_MAX, Math.max(0, hi + delta)); lo = Math.min(lo, hi); }
+  setSettings({ lo, hi });
 }
 function renderPlayers() {
   const list = loadPlayers(), box = $('players'), current = $('nameInput').value.trim();
@@ -478,9 +590,8 @@ function renderPlayers() {
     chip.textContent = name;
     chip.onclick = () => {
       $('nameInput').value = name; $('err').textContent = '';
-      const saved = playerModes()[name];
-      if (saved && typeof saved === 'object') { untimed = !!saved.untimed; setMode(saved.mode); }
-      else if (MODES[saved]) setMode(saved); else renderPlayers();
+      const saved = cleanSettings(playerModes()[name]);
+      if (saved) setSettings(saved); else renderPlayers();
     };
     box.appendChild(chip);
   }
@@ -496,8 +607,9 @@ function startGame() {
   const name = $('nameInput').value.trim();
   if (!name) { $('err').textContent = 'כתוב את השם שלך כדי להיכנס לטבלה 🙂'; $('nameInput').focus(); return; }
   try { localStorage.setItem('mult-name', name); } catch {}
+  if (!playableOps().length) { $('err').textContent = 'בחילוק אי אפשר לחלק ב-0 – בחר טווח שמגיע לפחות עד 1'; return; }
   rememberPlayer(name);
-  try { localStorage.setItem('mult-player-mode', JSON.stringify({ ...playerModes(), [name]: { mode, untimed } })); } catch {}
+  try { localStorage.setItem('mult-player-mode', JSON.stringify({ ...playerModes(), [name]: settings })); } catch {}
   $('err').textContent = '';
   right = wrong = streak = 0; myEntry = null;
   $('right').textContent = 0; $('streak').textContent = 0;
@@ -520,7 +632,7 @@ function stopGame() {
   running = false;
   clearInterval(clock);
   keepAwake(false);
-  clearTimeout(pendingTimer);
+  cancelPending();
   try { rec.abort(); } catch {}
 }
 
@@ -556,10 +668,10 @@ function confetti(n) {
 }
 
 // floating numbers in the background
-for (let i = 0; i < 14; i++) {
+for (let i = 0; i < 18; i++) {
   const n = document.createElement('div');
   n.className = 'bg-num';
-  n.textContent = ['×','+','=', 1+Math.floor(Math.random()*100)][i % 4];
+  n.textContent = ['×','÷','+','−','=', 1+Math.floor(Math.random()*100)][i % 6];
   n.style.left = Math.random() * 100 + 'vw';
   n.style.fontSize = 30 + Math.random() * 60 + 'px';
   n.style.animationDuration = 18 + Math.random() * 20 + 's';
@@ -568,9 +680,11 @@ for (let i = 0; i < 14; i++) {
 }
 
 try { $('nameInput').value = localStorage.getItem('mult-name') || ''; } catch {}
-document.querySelectorAll('.mode[data-mode]').forEach(btn => btn.onclick = () => setMode(btn.dataset.mode));
-document.querySelectorAll('.timing').forEach(btn => btn.onclick = () => setUntimed(btn.dataset.untimed === '1'));
-setMode(mode);
+document.querySelectorAll('.op').forEach(btn => btn.onclick = () => toggleOp(btn.dataset.op));
+document.querySelectorAll('[data-step]').forEach(btn => btn.onclick = () => stepRange(btn.dataset.end, +btn.dataset.step));
+document.querySelectorAll('.preset').forEach(btn => btn.onclick = () => { const [lo, hi] = btn.dataset.range.split('-').map(Number); setSettings({ lo, hi }); });
+document.querySelectorAll('.timing').forEach(btn => btn.onclick = () => setSettings({ untimed: btn.dataset.untimed === '1' }));
+setSettings({});
 if (location.protocol === 'file:')
   $('err').textContent = 'כדי שהדפדפן לא ישאל על המיקרופון בכל תרגיל – פתח את המשחק דרך הקובץ "הפעל משחק.bat".';
 renderBoard();
@@ -615,7 +729,7 @@ $('otherBtn').onclick = () => {
   $('nameInput').focus();
 };
 $('nameInput').oninput = renderPlayers;
-$('skipBtn').onclick = () => { clearTimeout(pendingTimer); streak = 0; $('streak').textContent = 0; resetListening(); newQuestion(); };
+$('skipBtn').onclick = () => { cancelPending(); streak = 0; $('streak').textContent = 0; resetListening(); newQuestion(); };
 </script>
 </body>
 </html>
