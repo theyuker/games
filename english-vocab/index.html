@@ -126,6 +126,8 @@ h1,h2{margin:0;text-wrap:balance}
 .answer{display:grid;justify-items:center;gap:6px;animation:pop .35s ease-out}
 .answer .he{font-size:2.1rem;font-weight:700;color:var(--good)}
 .fb{min-height:1.6em;font-weight:600;font-size:1.12rem}
+.btn.listening{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.05)}}
 .fb.ok{color:var(--good)}.fb.no{color:var(--bad)}.fb.info{color:var(--muted)}
 .fb .en{font-size:1.3rem}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -153,6 +155,7 @@ h1,h2{margin:0;text-wrap:balance}
 .tile{width:3.2rem;height:3.2rem;background:var(--paper);border:2px solid var(--edge);border-radius:12px;box-shadow:0 4px 0 var(--edge);font:700 1.8rem var(--en);cursor:pointer;transition:transform .08s,box-shadow .08s}
 .tile:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
 .tile:disabled{opacity:.18;cursor:default}
+.tiles{margin-top:12px}.tiles.abc{gap:6px}.tiles.abc .tile{width:2.6rem;height:2.6rem;font-size:1.45rem}
 .typebox{display:grid;gap:8px;justify-items:center;width:100%}
 #spell{width:min(100%,340px);font:700 2rem var(--en);text-align:center;padding:10px 12px;border:3px solid var(--edge);border-radius:14px;background:var(--sunk);color:var(--ink)}
 #spell.ok{border-color:var(--good);background:var(--good-bg)}
@@ -229,21 +232,21 @@ const MUTE='<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="t
 const canSpeak=typeof window.speechSynthesis!=='undefined';
 const MODES=[
  {id:'say',t:'אמור בקול',d:'מילה באנגלית, אומרים בקול מה היא בעברית',c:'var(--l1)',s:'<span class="en">cat</span><span class="q">?</span>',
-  how:['מופיעה מילה באנגלית. קרא אותה בשקט לעצמך.','אמור בקול מה היא אומרת בעברית.','לחץ על "בוא נבדוק" ותראה אם צדקת.','תהיה כן: לחץ "ידעתי" רק אם באמת ידעת. מילים שלא ידעת יחזרו שוב.']},
+  how:['מופיעה מילה באנגלית. קרא אותה בשקט לעצמך.','אמור בקול מה היא אומרת בעברית.','לחץ על המיקרופון 🎤 ואמור את המילה בעברית. המשחק יכתוב מה הוא שמע ויבדוק.','אם הוא לא שמע טוב, לחץ "זה לא מה שאמרתי" ותבדוק לבד. תהיה כן: לחץ "ידעתי" רק אם באמת ידעת.']},
  {id:'choice',t:'בחר תשובה',d:'4 תשובות, רק אחת נכונה',c:'var(--l2)',s:'<span class="mini4"><i></i><i class="r"></i><i></i><i></i></span>',
   how:['מופיעה מילה, ולמטה 4 תשובות.','רק תשובה אחת נכונה. שים לב: חלק מהתשובות נראות דומות בכוונה (כמו dad ו-bad).','אחרי כל תשובה תשמע איך אומרים את המילה.'],opts:{k:'dir',items:[['en','רואים אנגלית, בוחרים עברית','קריאה והבנה'],['he','רואים עברית, בוחרים אנגלית','זיהוי המילה הנכונה']]}},
  {id:'spell',t:'כתוב באנגלית',d:'מילה בעברית, כותבים אותה באותיות באנגלית',c:'var(--l3)',s:'<span class="en">c<span class="blank"></span>t</span>',
-  how:['מופיעה מילה בעברית.','כתוב אותה באנגלית, אות אחרי אות.','אותיות ירוקות נכונות, אדומות צריך לתקן. יש 3 ניסיונות.','תקוע? כפתור "רמז" נותן את האות הבאה.'],opts:{k:'level',items:[['tiles','בוחרים אותיות','קל: האותיות מחכות למטה'],['type','מקלידים לבד','מאתגר: בלי עזרה']]}},
+  how:['מופיעה מילה בעברית.','כתוב אותה באנגלית, אות אחרי אות.','אותיות ירוקות נכונות, אדומות צריך לתקן. יש 3 ניסיונות.','תקוע? כפתור "רמז" נותן את האות הבאה.'],opts:{k:'level',items:[['tiles','בוחרים אותיות','קל: האותיות מחכות למטה'],['all','כל האותיות','קשה: בוחרים מכל ה-ABC'],['type','מקלידים לבד','מאתגר: בלי עזרה']]}},
  {id:'listen',t:'הקשב ובחר',d:'שומעים מילה ובוחרים איך היא נכתבת',c:'var(--l4)',s:'<span style="color:var(--l4)">'+SPK+'</span>',
   how:['לחץ על הרמקול ותשמע מילה באנגלית.','בחר מבין 4 המילים את המילה ששמעת.','אפשר לשמוע שוב כמה פעמים שרוצים.']},
  {id:'pairs',t:'זוגות',d:'משחק זיכרון: מילה באנגלית ופירוש בעברית',c:'var(--accent)',s:'<span class="minic t1 en">dog</span><span class="minic t2">כלב</span>',
-  how:['יש 12 קלפים הפוכים.','הפוך שני קלפים. אם זו מילה באנגלית והפירוש שלה בעברית, מצאת זוג!','נסה לגמור בכמה שפחות ניסיונות.']},
+  how:['הקלפים הפוכים. בוחרים למטה כמה זוגות יהיו.','הפוך שני קלפים. אם זו מילה באנגלית והפירוש שלה בעברית, מצאת זוג!','נסה לגמור בכמה שפחות ניסיונות.'],opts:{k:'n',items:[['6','6 זוגות','12 קלפים'],['8','8 זוגות','16 קלפים'],['10','10 זוגות','20 קלפים'],['12','12 זוגות','24 קלפים']]}},
  {id:'speed',t:'מרוץ 60 שניות',d:'כמה מילים תספיק בדקה אחת?',c:'var(--bad)',s:'<span class="ring">60</span>',
   how:['יש לך דקה אחת.','מופיעה מילה באנגלית, בוחרים את הפירוש בעברית מהר ככל האפשר.','כל תשובה נכונה שווה נקודה. תשובות נכונות ברצף בונות קומבו.']}
 ];
 
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const DEF={m:{},stars:0,lists:[1,2,3,4],sound:true,best:0,opt:{choice:{dir:'en'},spell:{level:'tiles'}}};
+const DEF={m:{},stars:0,lists:[1,2,3,4],sound:true,best:0,opt:{choice:{dir:'en'},spell:{level:'tiles'},pairs:{n:'6'}}};
 let S=Object.assign({},DEF,store.get('vq1',{}));S.opt=Object.assign({},DEF.opt,S.opt||{});
 const save=()=>store.set('vq1',S);
 
@@ -259,7 +262,7 @@ const mastery=w=>S.m[w.en]||0;
 const pool=()=>{const p=WORDS.filter(w=>S.lists.includes(w.list));return p.length?p:WORDS};
 
 let R=null,last=null,timers=[];
-function clearTimers(){timers.forEach(clearTimeout);timers=[];if(R&&R.tick){clearInterval(R.tick);R.tick=null}}
+function clearTimers(){if(typeof stopRec==='function')stopRec();timers.forEach(clearTimeout);timers=[];if(R&&R.tick){clearInterval(R.tick);R.tick=null}}
 const later=(f,ms)=>timers.push(setTimeout(f,ms));
 
 /* sound + speech */
@@ -302,7 +305,7 @@ function setup(id){const M=MODES.find(m=>m.id===id);window.scrollTo(0,0);
  const n=pool().length;
  app.innerHTML=`<section class="setup"><div><button class="btn sm ghost" data-act="home">→ חזרה</button></div>
  <h1><span class="dot" style="--c:${M.c}"></span>${M.t}</h1><ol class="how">${M.how.map(x=>`<li>${x}</li>`).join('')}</ol>${opts}
- <p class="lens">מתרגלים ${n} מילים מ-${S.lists.length} רשימות. ${id==='pairs'?'6 זוגות בכל משחק.':id==='speed'?'':'10 מילים בכל סיבוב.'}</p>
+ <p class="lens">מתרגלים ${n} מילים מ-${S.lists.length} רשימות. ${id==='pairs'?`${Math.min(+S.opt.pairs.n,n)} זוגות בכל משחק.`:id==='speed'?'':'10 מילים בכל סיבוב.'}</p>
  <div class="actions"><button class="btn primary big" data-act="start" data-mode="${id}">יאללה, מתחילים!</button></div></section>`}
 
 function startMode(mode,words){clearTimers();window.scrollTo(0,0);last={mode};
@@ -317,11 +320,43 @@ function fb(html,cls){const f=$('#fb');if(f){f.className='fb '+cls;f.innerHTML=h
 function q(){const w=R.words[R.i];({say:qSay,choice:qChoice,spell:qSpell,listen:qListen})[R.mode](w)}
 function next(){clearTimers();R.i++;if(R.i>=R.words.length)finish();else q()}
 
-function qSay(w){R.cur={w};
+function qSay(w){R.cur={w,tries:0};const mic=SR&&!micBlocked;
  app.innerHTML=progress()+`<div class="qcard"><span class="tag">מה זה בעברית? אמרו בקול</span><div class="word">${enS(w.en)}</div>${spkBtn(w.en)}
+ <div class="fb" id="fb"></div>
  <div class="answer" id="ans" hidden><div class="he">${w.he}</div>${w.e?`<div class="emo">${w.e}</div>`:''}</div></div>
- <div class="actions" id="a1"><button class="btn primary big" data-act="flip">אמרתי! בוא נבדוק</button></div>
+ <div class="actions" id="a1">${mic?'<button class="btn primary big" data-act="mic" id="micbtn">🎤 לחצו ואמרו בעברית</button><button class="btn ghost" data-act="flip">בלי מיקרופון</button>':'<button class="btn primary big" data-act="flip">אמרתי! בוא נבדוק</button>'}</div>
  <div class="actions" id="a2" hidden><button class="btn bad big" data-act="judge" data-ok="0">עוד לא ידעתי</button><button class="btn good big" data-act="judge" data-ok="1">ידעתי!</button></div>`}
+
+/* say: speech recognition (Hebrew) */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let micBlocked=false,rec=null;
+const FINAL={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+const NUM={'6':'שש','7':'שבע','10':'עשר'};
+const heNorm=t=>t.replace(/[֑-ׇ]/g,'').replace(/\d+/g,d=>NUM[d]||d).replace(/[ךםןףץ]/g,c=>FINAL[c]).toLowerCase().replace(/[^א-תa-z0-9]+/g,' ').trim();
+function heTargets(he){const out=[];he.split('/').forEach(p=>{const m=p.match(/\(([^)]*)\)/);out.push(p.replace(/\([^)]*\)/g,''));if(m)out.push(m[1].replace(/^\s*כמו:?/,''))});
+ return [...new Set(out.map(heNorm).filter(Boolean))]}
+function lev(a,b){const d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return d[b.length]}
+function heMatch(heard,he){const h=heNorm(heard);if(!h)return false;const ws=h.split(' ');const cands=[h,...ws,...ws.slice(1).map((x,i)=>ws[i]+' '+x)];
+ return heTargets(he).some(t=>{const tol=t.length>=8?2:t.length>=5?1:0;return cands.includes(t)||(t.length>=2&&h.includes(t))||cands.some(c=>lev(c,t)<=tol)})}
+function stopRec(){if(rec){try{rec.onend=null;rec.abort()}catch(e){}rec=null}}
+function listenSay(){const c=R&&R.cur;if(!SR||!c||c.done||rec)return;
+ const r=new SR();rec=r;r.lang='he-IL';r.interimResults=false;r.continuous=false;r.maxAlternatives=5;const heard=[];let err='';
+ const b=$('#micbtn');if(b){b.classList.add('listening');b.disabled=true;b.textContent='🎤 מקשיב… דברו עכשיו'}fb('','info');
+ r.onresult=e=>{for(const res of e.results)for(const a of res){const t=(a.transcript||'').trim();if(t)heard.push(t)}};
+ r.onerror=e=>{err=e.error||'error'};
+ r.onend=()=>{rec=null;if(!R||R.cur!==c)return;sayHeard(c,heard,err)};
+ later(()=>{if(rec===r)try{r.stop()}catch(e){}},8000);
+ try{r.start()}catch(e){rec=null;sayHeard(c,[],'error')}}
+function sayHeard(c,heard,err){const b=$('#micbtn');if(b){b.classList.remove('listening');b.disabled=false;b.textContent='🎤 לנסות שוב'}
+ if(err==='not-allowed'||err==='service-not-allowed'){micBlocked=true;fb('אין גישה למיקרופון. בודקים לבד:','info');return flipSay()}
+ if(!heard.length){fb(err&&err!=='no-speech'&&err!=='aborted'?'משהו השתבש במיקרופון. נסו שוב או בדקו לבד.':'לא שמעתי כלום. לחצו על המיקרופון ודברו בקול.','info');return}
+ const hit=heard.find(t=>heMatch(t,c.w.he));
+ if(hit){c.done=true;$('#a1').hidden=true;$('#ans').hidden=false;fb(`שמעתי: «${esc(hit)}» ✓ ${praise()}`,'ok');outcome(c.w,'ok');speak(c.w.en);later(next,1700);return}
+ c.tries++;
+ if(c.tries>=2){fb(`שמעתי: «${esc(heard[0])}». זו התשובה. אם אמרתם נכון והמחשב לא הבין, לחצו "ידעתי!"`,'no');return flipSay()}
+ fb(`שמעתי: «${esc(heard[0])}». זה לא נשמע נכון, נסו שוב`,'no');
+ if(!$('#notme'))$('#a1').insertAdjacentHTML('beforeend','<button class="btn ghost" data-act="flip" id="notme">זה לא מה שאמרתי</button>')}
+function flipSay(){if(!R||R.mode!=='say'||R.cur.done)return;stopRec();$('#ans').hidden=false;$('#a1').hidden=true;$('#a2').hidden=false;speak(R.cur.w.en)}
 
 function qChoice(w){const dir=R.opt.dir||'en';const opts=shuffle([w,...distract(w)]);R.cur={w,opts,answered:false,dir};
  const prompt=dir==='en'?`<div class="word">${enS(w.en)}</div>`:`<div class="he-word">${w.he}</div>`;
@@ -346,21 +381,21 @@ const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
 function qSpell(w){const level=R.opt.level||'tiles';const len=w.en.replace(/ /g,'').length;
  R.cur={w,tries:0,hint:false,answered:false,level};
  let body;
- if(level==='tiles'){R.cur.slots=[...w.en].map(ch=>ch===' '?{sp:true}:{ch:null,tile:null,st:'',lock:false});
+ if(level!=='type'){R.cur.slots=[...w.en].map(ch=>ch===' '?{sp:true}:{ch:null,tile:null,st:'',lock:false});
   const AB='abcdefghiklmnoprstuwy';const dec=[];while(dec.length<2){const l=AB[Math.random()*AB.length|0];if(!dec.includes(l))dec.push(l)}
-  R.cur.tiles=shuffle([...w.en.replace(/ /g,''),...dec]).map(ch=>({ch,used:false}));
-  body=`<div class="slots en" id="slots"></div><div class="fb" id="fb"></div></div><div class="tiles" id="tiles"></div>
+  R.cur.tiles=level==='all'?[...'abcdefghijklmnopqrstuvwxyz'].map(ch=>({ch,used:false})):shuffle([...w.en.replace(/ /g,''),...dec]).map(ch=>({ch,used:false}));
+  body=`<div class="slots en" id="slots"></div><div class="fb" id="fb"></div></div><div class="tiles${level==='all'?' abc':''}" id="tiles"></div>
   <div class="actions"><button class="btn" data-act="back">מחק ⌫</button><button class="btn" data-act="hint">רמז</button></div>`}
  else body=`<div class="typebox"><input id="spell" dir="ltr" lang="en" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="כתבו את המילה באנגלית"><span class="lens">${len} אותיות${w.en.includes(' ')?' (שתי מילים)':''}</span><div class="diff" id="diff" dir="ltr"></div></div><div class="fb" id="fb"></div></div>
   <div class="actions"><button class="btn" data-act="hint">רמז</button><button class="btn primary" data-act="check">בדוק</button></div>`;
  app.innerHTML=progress()+`<div class="qcard"><span class="tag">כתבו באנגלית</span><div class="he-word">${w.he}</div>${w.e?`<div class="emo sm">${w.e}</div>`:''}${body}${nextBox}`;
- if(level==='tiles')drawSpell();else later(()=>{const i=$('#spell');if(i)i.focus()},60)}
+ if(level!=='type')drawSpell();else later(()=>{const i=$('#spell');if(i)i.focus()},60)}
 function drawSpell(){const c=R.cur;
  $('#slots').innerHTML=c.slots.map(s=>s.sp?'<span class="slot sp"></span>':`<span class="slot ${s.st}">${s.ch||''}</span>`).join('');
  $('#tiles').innerHTML=c.tiles.map((t,i)=>`<button class="tile en" data-act="tile" data-i="${i}" ${t.used||c.answered?'disabled':''}>${t.ch}</button>`).join('')}
 const filled=c=>c.slots.every(s=>s.sp||s.ch!=null);
 function tile(i){const c=R.cur;if(!c||c.answered||c.checking)return;const t=c.tiles[i];if(!t||t.used)return;const s=c.slots.find(s=>!s.sp&&s.ch==null);if(!s)return;
- s.ch=t.ch;s.tile=i;t.used=true;drawSpell();if(filled(c)){c.checking=true;later(checkTiles,180)}}
+ s.ch=t.ch;s.tile=i;if(c.level!=='all')t.used=true;drawSpell();if(filled(c)){c.checking=true;later(checkTiles,180)}}
 function backTile(){const c=R.cur;if(!c||c.answered||c.checking)return;for(let k=c.slots.length-1;k>=0;k--){const s=c.slots[k];if(!s.sp&&s.ch!=null&&!s.lock){c.tiles[s.tile].used=false;s.ch=null;s.tile=null;s.st='';break}}drawSpell()}
 function checkTiles(){const c=R.cur;c.checking=false;const ans=[...c.w.en];let all=true;
  c.slots.forEach((s,i)=>{if(s.sp)return;if(s.ch.toLowerCase()===ans[i].toLowerCase()){s.st='ok';s.lock=true}else{s.st='no';all=false}});
@@ -375,7 +410,7 @@ function hint(){const c=R.cur;if(!c||c.answered||c.checking)return;c.hint=true;c
  const s=c.slots[idx];if(s.ch!=null){c.tiles[s.tile].used=false;s.ch=null;s.tile=null}
  let ti=c.tiles.findIndex(t=>!t.used&&t.ch.toLowerCase()===ans[idx].toLowerCase());
  if(ti<0){const o=c.slots.find((o,j)=>j!==idx&&!o.sp&&!o.lock&&o.ch&&o.ch.toLowerCase()===ans[idx].toLowerCase());if(o){ti=o.tile;o.ch=null;o.tile=null;o.st=''}}
- if(ti<0)return;s.ch=c.tiles[ti].ch;s.tile=ti;c.tiles[ti].used=true;s.st='ok';s.lock=true;drawSpell();fb('קיבלתם את האות הבאה','info');
+ if(ti<0)return;s.ch=c.tiles[ti].ch;s.tile=ti;if(c.level!=='all')c.tiles[ti].used=true;s.st='ok';s.lock=true;drawSpell();fb('קיבלתם את האות הבאה','info');
  if(filled(c)){c.checking=true;later(checkTiles,180)}}
 function checkType(){const c=R.cur;if(!c||c.answered)return;const inp=$('#spell');const v=norm(inp.value),t=norm(c.w.en);if(!v)return;
  if(v===t){c.answered=true;inp.classList.add('ok');inp.disabled=true;$('#diff').innerHTML='';spellDone(true);return}
@@ -388,14 +423,14 @@ function spellDone(ok){const c=R.cur;
  speak(c.w.en);showNext()}
 
 /* pairs */
-function startPairs(){const ws=pickN(pool(),6);R={mode:'pairs',cards:shuffle(ws.flatMap((w,i)=>[{w,id:i,lang:'en'},{w,id:i,lang:'he'}])),open:[],matched:0,tries:0,missed:[],ok:0,lock:false};
+function startPairs(){const ws=pickN(pool(),+S.opt.pairs.n||6);R={mode:'pairs',np:ws.length,cards:shuffle(ws.flatMap((w,i)=>[{w,id:i,lang:'en'},{w,id:i,lang:'he'}])),open:[],matched:0,tries:0,missed:[],ok:0,lock:false};
  app.innerHTML=`<div class="prog"><button class="btn sm ghost" data-act="home">יציאה</button><div class="pbar"><i id="pbar" style="width:0"></i></div><span class="count">ניסיונות: <b id="ptries">0</b></span></div>
  <p class="inst">מצאו זוגות: מילה באנגלית והפירוש שלה בעברית</p>
  <div class="pgrid">${R.cards.map((c,i)=>`<button class="pc" data-act="pc" data-i="${i}" aria-label="קלף ${i+1}"><span class="in"><span class="f">?</span><span class="b">${c.lang==='en'?enS(c.w.en):c.w.he}</span></span></button>`).join('')}</div>`}
 function pairClick(i){if(!R||R.mode!=='pairs'||R.lock)return;const c=R.cards[i];if(c.open||c.done)return;const els=document.querySelectorAll('.pc');
  c.open=true;els[i].classList.add('open');if(c.lang==='en')speak(c.w.en);R.open.push(i);
  if(R.open.length<2)return;const[a,b]=R.open;R.open=[];R.tries++;$('#ptries').textContent=R.tries;const A=R.cards[a],B=R.cards[b];
- if(A.id===B.id){A.done=B.done=true;els[a].classList.add('done');els[b].classList.add('done');R.matched++;R.ok++;S.stars++;save();renderHeader();sGood();$('#pbar').style.width=(R.matched/6*100)+'%';if(R.matched===6)later(finish,800)}
+ if(A.id===B.id){A.done=B.done=true;els[a].classList.add('done');els[b].classList.add('done');R.matched++;R.ok++;S.stars++;save();renderHeader();sGood();$('#pbar').style.width=(R.matched/R.np*100)+'%';if(R.matched===R.np)later(finish,800)}
  else{R.lock=true;later(()=>{A.open=B.open=false;els[a].classList.remove('open');els[b].classList.remove('open');R.lock=false},1000)}}
 
 /* speed */
@@ -411,7 +446,7 @@ function nextSpeed(){if(!R||R.mode!=='speed')return;const p=pool();let w;do{w=pi
 /* results */
 function finish(){if(!R)return;clearTimers();const mode=R.mode;let st,line;
  if(mode==='speed'){const nb=R.score>S.best;if(nb){S.best=R.score;save()}st=R.score>=20?3:R.score>=12?2:R.score>=5?1:0;line=`${R.score} תשובות נכונות בדקה${nb?' · שיא חדש!':` · השיא: ${S.best}`}`}
- else if(mode==='pairs'){st=R.tries<=9?3:R.tries<=13?2:1;line=`כל 6 הזוגות נמצאו ב-${R.tries} ניסיונות`}
+ else if(mode==='pairs'){st=R.tries<=Math.ceil(R.np*1.5)?3:R.tries<=Math.ceil(R.np*2.2)?2:1;line=`כל ${R.np} הזוגות נמצאו ב-${R.tries} ניסיונות`}
  else{const r=R.ok/R.words.length;st=r>=.9?3:r>=.7?2:r>=.4?1:0;line=`${R.ok} מתוך ${R.words.length} נכון${mode==='spell'?' בלי עזרה':''}`}
  const MSG=['זו רק ההתחלה. עוד סיבוב ויהיה יותר טוב!','יפה! בדרך הנכונה','מעולה! עוד קצת וזה מושלם','מושלם! אלופים!'];
  const missed=R.missed.slice();R={mode,missed,done:true};
@@ -439,7 +474,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
   case 'opt':S.opt[b.dataset.mode][b.dataset.k]=b.dataset.v;save();setup(b.dataset.mode);break;
   case 'start':startMode(b.dataset.mode);break;
   case 'speak':speak(b.dataset.t);break;
-  case 'flip':if(R&&R.mode==='say'){$('#ans').hidden=false;$('#a1').hidden=true;$('#a2').hidden=false;speak(R.cur.w.en)}break;
+  case 'flip':flipSay();break;
+  case 'mic':listenSay();break;
   case 'judge':if(R&&R.mode==='say'&&!R.cur.done){R.cur.done=true;outcome(R.cur.w,b.dataset.ok==='1'?'ok':'bad');later(next,250)}break;
   case 'pick':pick(+b.dataset.i);break;
   case 'next':next();break;
@@ -460,7 +496,7 @@ document.addEventListener('keydown',e=>{if(!R||R.done)return;const inInput=e.tar
  if(e.key==='Enter'&&n&&!n.hidden){e.preventDefault();next();return}
  if(['choice','listen','speed'].includes(R.mode)&&/^[1-4]$/.test(e.key)){pick(+e.key-1);return}
  if(R.mode==='say'){if((e.key===' '||e.key==='Enter')&&!$('#a1').hidden){e.preventDefault();$('#a1 button').click()}return}
- if(R.mode==='spell'&&R.cur&&R.cur.level==='tiles'){if(e.key==='Backspace'){e.preventDefault();backTile();return}
+ if(R.mode==='spell'&&R.cur&&R.cur.level!=='type'){if(e.key==='Backspace'){e.preventDefault();backTile();return}
   if(/^[a-zA-Z]$/.test(e.key)){const i=R.cur.tiles.findIndex(t=>!t.used&&t.ch.toLowerCase()===e.key.toLowerCase());if(i>=0)tile(i)}}});
 
 renderHeader();home();
