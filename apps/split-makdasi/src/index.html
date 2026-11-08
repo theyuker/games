@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f9d76">
+<title>ספליט מקדאסי</title>
+<meta property="og:title" content="ספליט מקדאסי">
+<meta property="og:description" content="מחלקים את הוצאות הטיול — וכל אחד מעביר לבן אדם אחד">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f7;--card:#fff;--ink:#14213d;--muted:#6b7280;--acc:#0f9d76;--acc-d:#0b7d5e;--acc-l:#e6f6f0;--red:#d64545;--red-l:#fdeeee;--line:#e5e8ec;--r:16px;--wa:#25d366}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Heebo,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent;font-size:16px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px calc(120px + env(safe-area-inset-bottom))}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;color:var(--acc-d);letter-spacing:.2px}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+h1{font-size:24px;margin:10px 0 2px;font-weight:800;line-height:1.2}
+h2{font-size:17px;margin:22px 0 10px;font-weight:700}
+.sub{color:var(--muted);font-size:14px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 2px rgba(20,33,61,.06);margin-bottom:12px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.grow{flex:1;min-width:0}
+label.f{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:14px 0 6px}
+input.in,select.in{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;outline:none;font-size:16px}
+input.in:focus,select.in:focus{border-color:var(--acc)}
+.amount-in{font-size:28px!important;font-weight:700;text-align:center;direction:ltr}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:13px 18px;font-weight:700;cursor:pointer;background:var(--acc);color:#fff;text-decoration:none;font-size:16px}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn.block{width:100%}
+.btn.ghost{background:var(--acc-l);color:var(--acc-d)}
+.btn.plain{background:transparent;color:var(--acc-d);padding:8px 10px}
+.btn.danger{background:var(--red-l);color:var(--red)}
+.btn.danger.sure{background:var(--red);color:#fff}
+.btn.wa{background:var(--wa);color:#fff}
+.btn.sm{padding:8px 12px;font-size:14px;border-radius:10px}
+.seg{display:flex;background:#eef1f4;border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:9px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:500}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.money{direction:ltr;unicode-bidi:isolate;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pos{color:var(--acc-d)}
+.neg{color:var(--red)}
+.exp{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.exp:last-child{border-bottom:0}
+.exp .ic{width:40px;height:40px;border-radius:12px;background:var(--acc-l);color:var(--acc-d);display:grid;place-items:center;font-weight:800;flex:none}
+.exp .t{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp .m{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp .a{text-align:left;flex:none}
+.exp .a b{display:block;font-size:16px}
+.exp .a small{color:var(--muted);font-size:12px}
+.empty{text-align:center;color:var(--muted);padding:34px 10px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+.nav .in{display:flex;max-width:560px;width:100%}
+.nav button{flex:1;border:0;background:none;padding:10px 4px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav button.on{color:var(--acc-d)}
+.nav svg{width:22px;height:22px}
+.fab{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:21;box-shadow:0 6px 18px rgba(15,157,118,.35);border-radius:999px;padding:14px 26px;font-size:17px}
+.fab:active{transform:translateX(-50%) scale(.97)}
+.hero{background:linear-gradient(135deg,#0f9d76,#0b7d5e);color:#fff;border-radius:20px;padding:18px;margin:14px 0}
+.hero .lbl{opacity:.85;font-size:14px}
+.hero .big{font-size:26px;font-weight:800;margin-top:4px;line-height:1.25}
+.hero.red{background:linear-gradient(135deg,#e05a5a,#c43d3d)}
+.hero.gray{background:linear-gradient(135deg,#64748b,#475569)}
+.tr{display:flex;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.tr:last-child{border-bottom:0}
+.tr.me{background:var(--acc-l);margin:0 -16px;padding:12px 16px}
+.tr .arrow{color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-weight:500;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 4px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .n{text-align:left}
+.note{font-size:13px;color:var(--muted)}
+.warn{background:#fff7e6;color:#8a5a00;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{background:#fff;width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .2s ease-out}
+.grab{width:42px;height:5px;border-radius:9px;background:#d9dde3;margin:2px auto 8px}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+#toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-120px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;z-index:60;transition:transform .25s;font-weight:500;max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+.mem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.mem:last-child{border-bottom:0}
+.mem .grow{overflow:hidden}
+.mem .grow b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mem .btn{flex:none}
+.ibtn{width:36px;height:36px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--acc-d);display:grid;place-items:center;cursor:pointer;flex:none}
+.ibtn svg{width:19px;height:19px}
+.ibtn.del{color:var(--red)}
+.ibtn.del.sure{background:var(--red);color:#fff;width:auto;padding:0 10px;font-weight:700;font-size:13px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;flex:none;font-size:14px}
+.pick{display:flex;align-items:center;gap:12px;width:100%;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;font-weight:700;text-align:right}
+.pick:active{border-color:var(--acc)}
+.spin{width:28px;height:28px;border:3px solid var(--acc-l);border-top-color:var(--acc);border-radius:50%;animation:sp 0.8s linear infinite;margin:60px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.rate{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rate input{width:110px;text-align:center;direction:ltr}
+.share-line{display:flex;gap:8px;margin-top:12px}
+.preview{background:var(--acc-l);color:var(--acc-d);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:12px;font-weight:500}
+</style>
+</head>
+<body>
+<div id="app"><div class="spin"></div></div>
+<div id="sheet"></div>
+<div id="toast"></div>
+<script>
+(() => {
+const APP_V = '7';
+const CUR = {ILS:{sym:'₪',name:'שקל'},USD:{sym:'$',name:'דולר'},EUR:{sym:'€',name:'יורו'}};
+const COLORS = ['#0f9d76','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#06b6d4','#a855f7'];
+const app = document.getElementById('app');
+const sheetEl = document.getElementById('sheet');
+const params = new URLSearchParams(location.search);
+let T = params.get('t');
+let trip = null, me = null, tab = 'exp', sheetOpen = false, pollTimer = null;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+
+function num(v){ const r = Math.round(v*100)/100; return r.toLocaleString('he-IL',{minimumFractionDigits: Number.isInteger(r)?0:2, maximumFractionDigits:2}); }
+function fmt(cents, cur){ const v = num(cents/100); return `<span class="money">${cur==='ILS' ? v+' ₪' : CUR[cur].sym+v}</span>`; }
+function fmtPlain(cents, cur){ const v = num(cents/100); return cur==='ILS' ? v+' ₪' : CUR[cur].sym+v; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2400); }
+function hash(s){ let h=0; for(const c of String(s)) h=(h*31+c.charCodeAt(0))>>>0; return h; }
+const color = id => COLORS[hash(id)%COLORS.length];
+const initial = n => esc((n||'?').trim().charAt(0));
+const shareUrl = () => location.origin + location.pathname + '?t=' + T;
+function dateStr(ts){ const d=new Date(ts); return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}); }
+
+async function api(body){
+  const opt = body ? {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)} : {cache:'no-store'};
+  const r = await fetch('/api/trip' + (body ? '' : '?t='+encodeURIComponent(T)), opt);
+  const j = await r.json().catch(() => ({error:'שגיאת תקשורת'}));
+  if (!r.ok) throw new Error(j.error || 'שגיאה');
+  return j;
+}
+async function act(body, btn){
+  if (btn) btn.disabled = true;
+  try { const j = await api({...body, t:T, by:me}); trip = j.trip; render(); return j; }
+  catch (e) { toast(e.message); throw e; }
+  finally { if (btn) btn.disabled = false; }
+}
+
+// ---------- calculations ----------
+const memberMap = () => Object.fromEntries(trip.members.map(m => [m.id, m]));
+const nameOf = id => (memberMap()[id]?.name) || 'חבר שהוסר';
+function rate(cur){ const p = trip.meta.ilsPer || {ILS:1}; return (p[cur]||1) / (p[trip.meta.base]||1); }
+const toBase = e => Math.round(Math.round(e.amount*100) * rate(e.currency));
+function parts(e){
+  if (e.split === 'all') return trip.members.map(m => m.id);
+  const mm = memberMap(); const ids = new Set(e.split.filter(id => mm[id]));
+  return trip.members.map(m => m.id).filter(id => ids.has(id));
+}
+const daysOn = () => !!trip.meta.tripDays;
+const daysOf = m => (m && m.days != null) ? Math.min(m.days, trip.meta.tripDays) : trip.meta.tripDays;
+const usesDays = e => daysOn() && (typeof e.byDays === 'boolean' ? e.byDays : e.split === 'all');
+const U = () => trip.meta.unit === 'nights'
+  ? {one:'לילה אחד', many:'לילות', by:'לפי לילות', q:'כמה לילות', label:'לפי מספר לילות'}
+  : {one:'יום אחד', many:'ימים', by:'לפי ימים', q:'כמה ימים', label:'לפי ימי השתתפות'};
+const fmtDays = d => (d === 1 ? U().one : num(d) + ' ' + U().many);
+function splitCents(c, w, off){
+  const W = w.reduce((a,b) => a+b, 0), n = w.length;
+  const out = w.map(x => Math.floor(c * x / W));
+  let rem = c - out.reduce((a,b) => a+b, 0);
+  for (let k = 0; rem > 0; k++, rem--) out[(k + off) % n]++;
+  return out;
+}
+function weightsFor(e, ps){ const mm = memberMap(); return usesDays(e) ? ps.map(id => daysOf(mm[id])) : ps.map(() => 1); }
+function compute(){
+  const paid={}, share={};
+  trip.members.forEach(m => { paid[m.id]=0; share[m.id]=0; });
+  let total = 0; const bad = [];
+  for (const e of trip.expenses){
+    const c = toBase(e), ps = parts(e);
+    if (!ps.length || paid[e.paidBy] === undefined){ bad.push(e); continue; }
+    total += c; paid[e.paidBy] += c;
+    const parts_ = splitCents(c, weightsFor(e, ps), hash(e.id) % ps.length);
+    ps.forEach((id,i) => { share[id] += parts_[i]; });
+  }
+  const net = {}; trip.members.forEach(m => net[m.id] = paid[m.id] - share[m.id]);
+  return {paid, share, net, total, bad, ...settle(net)};
+}
+// Every debtor pays exactly ONE person. One "hub" collects and passes on the remainder if needed.
+function settle(net){
+  const ids = trip.members.map(m => m.id);
+  const creditors = ids.filter(i => net[i] > 0), debtors = ids.filter(i => net[i] < 0);
+  if (!creditors.length) return {hub:null, transfers:[]};
+  const chosen = trip.meta.hub && net[trip.meta.hub] !== undefined ? trip.meta.hub : null;
+  const hub = chosen || creditors.reduce((a,b) => net[b] > net[a] ? b : a);
+  const rem = new Map(creditors.filter(c => c !== hub).map(c => [c, net[c]]));
+  const transfers = [];
+  if ((trip.meta.settle || 'hub') === 'hub') {
+    // Everyone who owes pays the hub; the hub pays everyone who is owed.
+    debtors.filter(d => d !== hub).sort((a,b) => net[a]-net[b]).forEach(d => transfers.push({from:d, to:hub, amt:-net[d]}));
+    creditors.filter(c => c !== hub).sort((a,b) => net[b]-net[a]).forEach(c => transfers.push({from:hub, to:c, amt:net[c]}));
+    return {hub, transfers};
+  }
+  debtors.filter(d => d !== hub).sort((a,b) => net[a]-net[b]).forEach(d => {
+    const owe = -net[d]; let best = null;
+    for (const [c,v] of rem) if (v >= owe && (best === null || v < rem.get(best))) best = c;
+    if (best !== null){ rem.set(best, rem.get(best) - owe); transfers.push({from:d, to:best, amt:owe}); }
+    else transfers.push({from:d, to:hub, amt:owe});
+  });
+  for (const [c,v] of rem) if (v > 0) transfers.push({from:hub, to:c, amt:v});
+  return {hub, transfers};
+}
+
+// ---------- screens ----------
+function render(){
+  if (!T) return renderHome();
+  if (!trip) return;
+  if (!me || !trip.members.find(m => m.id === me)) return renderJoin();
+  renderMain();
+}
+
+function recentTrips(){ try { return JSON.parse(lsGet('sm_trips') || '[]'); } catch(e){ return []; } }
+function rememberTrip(){ const l = recentTrips().filter(x => x.t !== T); l.unshift({t:T, name:trip.meta.name}); lsSet('sm_trips', JSON.stringify(l.slice(0,8))); }
+
+function renderHome(){
+  let cur = 'ILS';
+  const rec = recentTrips();
+  app.innerHTML = `<div class="wrap">
+    <div class="brand"><div class="logo">S</div>ספליט מקדאסי</div>
+    <h1>מחלקים הוצאות, בלי חשבונות</h1>
+    <div class="sub">כל אחד מכניס מה שהוציא. בסוף כל אחד מקבל העברה אחת — למי ובכמה.</div>
+    <div class="card" style="margin-top:18px">
+      <label class="f">שם הטיול / האירוע</label>
+      <input class="in" id="h-name" placeholder="למשל: אילת 2026" maxlength="60">
+      <label class="f">השם שלך</label>
+      <input class="in" id="h-me" placeholder="איך החברים קוראים לך" maxlength="30">
+      <label class="f">מטבע ההתחשבנות</label>
+      <div class="seg" id="h-cur">${Object.keys(CUR).map(c => `<button data-c="${c}" class="${c===cur?'on':''}">${CUR[c].sym} ${CUR[c].name}</button>`).join('')}</div>
+      <button class="btn block" id="h-go" style="margin-top:18px">יצירת קבוצה</button>
+    </div>
+    ${rec.length ? `<h2>הקבוצות שלי</h2><div class="card">${rec.map(r => `<a class="pick" style="text-decoration:none;color:inherit" href="?t=${esc(r.t)}"><div class="logo" style="background:${color(r.t)}">${initial(r.name)}</div>${esc(r.name)}</a>`).join('')}</div>` : ''}
+  </div>`;
+  app.querySelectorAll('#h-cur button').forEach(b => b.onclick = () => { cur = b.dataset.c; app.querySelectorAll('#h-cur button').forEach(x => x.classList.toggle('on', x===b)); });
+  document.getElementById('h-go').onclick = async (ev) => {
+    const name = document.getElementById('h-name').value.trim();
+    const mn = document.getElementById('h-me').value.trim();
+    if (!mn) return toast('צריך שם');
+    ev.target.disabled = true; ev.target.textContent = 'יוצר...';
+    try {
+      const j = await api({action:'create', name, memberName:mn, base:cur});
+      T = j.t; trip = j.trip; me = j.memberId; lsSet('sm_me_'+T, me);
+      history.replaceState(null, '', '?t=' + T);
+      rememberTrip(); startPolling(); render(); openInvite(true);
+    } catch(e){ toast(e.message); ev.target.disabled = false; ev.target.textContent = 'יצירת קבוצה'; }
+  };
+}
+
+function renderJoin(){
+  app.innerHTML = `<div class="wrap">
+    <div class="brand"><div class="logo">S</div>ספליט מקדאסי</div>
+    <h1>${esc(trip.meta.name)}</h1>
+    <div class="sub">הוזמנת לחלוקת הוצאות. מי אתה?</div>
+    ${trip.members.length ? `<h2>אני ברשימה</h2>${trip.members.map(m => `<button class="pick" data-id="${m.id}"><div class="av" style="background:${color(m.id)}">${initial(m.name)}</div>${esc(m.name)}</button>`).join('')}` : ''}
+    <h2>אני חדש בקבוצה</h2>
+    <div class="card">
+      <input class="in" id="j-name" placeholder="השם שלך" maxlength="30">
+      ${daysOn() ? `<label class="f">${U().q} אתה בטיול? (מתוך ${num(trip.meta.tripDays)})</label><input class="in" id="j-days" inputmode="decimal" value="${trip.meta.tripDays}">` : ''}
+      <button class="btn block" id="j-go" style="margin-top:12px">הצטרפות</button>
+      <div class="note" style="margin-top:10px">הוצאות שחולקו על "כולם" יכללו גם אותך אוטומטית.</div>
+    </div>
+  </div>`;
+  app.querySelectorAll('.pick').forEach(b => b.onclick = () => {
+    me = b.dataset.id; lsSet('sm_me_'+T, me); rememberTrip(); render();
+    const m = trip.members.find(x => x.id === me);
+    if (daysOn() && m && m.days == null) openDays(me);
+  });
+  document.getElementById('j-go').onclick = async (ev) => {
+    const n = document.getElementById('j-name').value.trim();
+    if (!n) return toast('צריך שם');
+    if (trip.members.some(m => m.name.trim() === n) && !ev.target.dataset.ok){ ev.target.dataset.ok = 1; ev.target.textContent = 'השם כבר קיים — ללחוץ שוב להצטרף בכל זאת'; return; }
+    const dEl = document.getElementById('j-days');
+    const days = dEl ? parseFloat(dEl.value.replace(',', '.')) : null;
+    if (dEl && !(days > 0)) return toast('מספר ימים לא תקין');
+    try { const j = await act({action:'addMember', name:n, days}, ev.target); me = j.memberId; lsSet('sm_me_'+T, me); rememberTrip(); render(); } catch(e){}
+  };
+}
+
+const ICONS = {
+  exp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+  sum:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>',
+  set:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><path d="M16 4.5a3 3 0 0 1 0 6M18 15c1.8.6 2.8 2.2 3 5"/></svg>'
+};
+
+function renderMain(){
+  const C = compute(), base = trip.meta.base;
+  const myNet = C.net[me] || 0;
+  let body = '';
+  if (tab === 'exp') body = viewExpenses(C, myNet);
+  else if (tab === 'sum') body = viewSummary(C);
+  else body = viewSettings(C);
+  app.innerHTML = `<div class="wrap">
+    <div class="row between">
+      <div class="brand"><div class="logo">S</div>ספליט מקדאסי</div>
+      <button class="btn wa sm" id="invite">הזמנת חברים</button>
+    </div>
+    <h1>${esc(trip.meta.name)}</h1>
+    <div class="sub">${trip.members.length} חברים · סה״כ ${fmt(C.total, base)} · מחובר/ת כ־<b>${esc(nameOf(me))}</b></div>
+    ${body}
+  </div>
+  ${tab !== 'set' ? `<button class="btn fab" id="add">+ הוצאה חדשה</button>` : ''}
+  <nav class="nav"><div class="in">
+    <button data-tab="exp" class="${tab==='exp'?'on':''}">${ICONS.exp}הוצאות</button>
+    <button data-tab="sum" class="${tab==='sum'?'on':''}">${ICONS.sum}התחשבנות</button>
+    <button data-tab="set" class="${tab==='set'?'on':''}">${ICONS.set}חברים והגדרות</button>
+  </div></nav>`;
+  app.querySelectorAll('.nav button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); scrollTo(0,0); });
+  const add = document.getElementById('add'); if (add) add.onclick = () => openExpense(null);
+  document.getElementById('invite').onclick = () => openInvite(false);
+  bindView(C);
+}
+
+function heroFor(C){ const h = heroInner(C); return trip.expenses.length ? h.replace(/<\/div>$/, `<div class="lbl" style="margin-top:10px;border-top:1px solid rgba(255,255,255,.25);padding-top:8px">בסך הכול הטיול עולה לך: <b>${fmt(C.share[me] || 0, trip.meta.base)}</b></div></div>`) : h; }
+function heroInner(C){
+  const base = trip.meta.base, my = C.transfers.filter(t => t.from === me), inc = C.transfers.filter(t => t.to === me);
+  if (!trip.expenses.length) return `<div class="hero gray"><div class="lbl">עדיין אין הוצאות</div><div class="big">מוסיפים הוצאה ראשונה ↓</div></div>`;
+  if (my.length === 1 && !inc.length) return `<div class="hero red"><div class="lbl">ההעברה שלך</div><div class="big">להעביר ${fmt(my[0].amt, base)} ל־${esc(nameOf(my[0].to))}</div></div>`;
+  if (!my.length && inc.length) return `<div class="hero"><div class="lbl">את/ה מקבל/ת</div><div class="big">${fmt(inc.reduce((s,t)=>s+t.amt,0), base)}</div><div class="lbl" style="margin-top:6px">מ־${inc.map(t => esc(nameOf(t.from))).join(', ')}</div></div>`;
+  if (my.length || inc.length) return `<div class="hero gray"><div class="lbl">את/ה מרכז/ת ההתחשבנות</div><div class="big">מקבל/ת ${fmt(inc.reduce((s,t)=>s+t.amt,0), base)} · מעביר/ה ${fmt(my.reduce((s,t)=>s+t.amt,0), base)}</div><div class="lbl" style="margin-top:6px">הפירוט בלשונית התחשבנות</div></div>`;
+  return `<div class="hero"><div class="lbl">המאזן שלך</div><div class="big">את/ה מאוזן/ת ✓</div></div>`;
+}
+
+function splitLabel(e){
+  const ps = parts(e);
+  const who = e.split === 'all' ? `כולם (${trip.members.length})` : (ps.length <= 2 ? ps.map(nameOf).join(' ו') : `${ps.length} משתתפים`);
+  return who + (usesDays(e) ? ' · ' + U().by : '');
+}
+
+function daysCard(){
+  if (!daysOn()) return '';
+  const m = trip.members.find(x => x.id === me);
+  return `<div class="card row between" style="padding:12px 16px"><div>השתתפת ב־<b>${fmtDays(daysOf(m))}</b> מתוך ${fmtDays(trip.meta.tripDays)}${m && m.days == null ? ' <span class="note">(ברירת מחדל)</span>' : ''}</div><button class="btn ghost sm" data-days="${me}">עדכון</button></div>`;
+}
+
+function viewExpenses(C){
+  const base = trip.meta.base;
+  return `${heroFor(C)}
+  ${daysCard()}
+  ${C.bad.length ? `<div class="warn">${C.bad.length} הוצאות לא נכללו בחישוב (אין משתתפים או משלם). לחצו עליהן לתיקון.</div>` : ''}
+  <div class="card" style="padding:4px 16px">
+    ${trip.expenses.length ? trip.expenses.map(e => `
+      <div class="exp" data-id="${e.id}">
+        <div class="ic" style="background:${color(e.paidBy)}22;color:${color(e.paidBy)}">${initial(e.description)}</div>
+        <div class="grow"><div class="t">${esc(e.description)}</div>
+          <div class="m">${esc(nameOf(e.paidBy))} שילם/ה · ${esc(splitLabel(e))} · ${dateStr(e.createdAt)}</div></div>
+        <div class="a"><b>${fmt(Math.round(e.amount*100), e.currency)}</b>${e.currency !== base ? `<small>≈ ${fmt(toBase(e), base)}</small>` : ''}</div>
+      </div>`).join('') : `<div class="empty">אין עדיין הוצאות.<br>לחצו על "+ הוצאה חדשה" כדי להתחיל.</div>`}
+  </div>`;
+}
+
+function viewSummary(C){
+  const base = trip.meta.base, others = trip.expenses.some(e => e.currency !== base);
+  const p = trip.meta.ilsPer;
+  return `${heroFor(C)}
+  <h2>מי מעביר למי</h2>
+  <div class="card">
+    ${C.transfers.length ? C.transfers.map(t => `
+      <div class="tr ${t.from===me||t.to===me?'me':''}">
+        <div class="av" style="background:${color(t.from)}">${initial(nameOf(t.from))}</div>
+        <div class="grow"><b>${esc(nameOf(t.from))}</b> <span class="arrow">←</span> <b>${esc(nameOf(t.to))}</b></div>
+        <b>${fmt(t.amt, base)}</b>
+      </div>`).join('') : `<div class="empty" style="padding:16px">אין העברות — כולם מאוזנים.</div>`}
+    ${C.hub && C.transfers.length ? `<div class="note" style="margin-top:10px">המרכז: <b>${esc(nameOf(C.hub))}</b>. ${(trip.meta.settle || 'hub') === 'hub' ? 'כולם מעבירים אליו/ה, והוא/היא מעביר/ה למי שמגיע לו.' : 'הוא/היא מעביר/ה הלאה את מה שנשאר.'}</div>` : ''}
+    <button class="btn wa block" id="wa-sum" style="margin-top:14px" ${C.transfers.length?'':'disabled'}>שליחת הסיכום בוואטסאפ</button>
+  </div>
+  <h2>כמה כל אחד משלם בסך הכול</h2>
+  <div class="card">
+    ${[...trip.members].sort((a,b) => C.share[b.id] - C.share[a.id]).map(m => `<div class="tr ${m.id===me?'me':''}">
+      <div class="av" style="background:${color(m.id)}">${initial(m.name)}</div>
+      <div class="grow"><b>${esc(m.name)}</b>${daysOn() ? ` <span class="note">· ${fmtDays(daysOf(m))}</span>` : ''}</div>
+      <b>${fmt(C.share[m.id], base)}</b></div>`).join('')}
+    <div class="row between" style="margin-top:10px;font-weight:700"><span>סה״כ הוצאות הטיול</span>${fmt(C.total, base)}</div>
+    <div class="note" style="margin-top:6px">העלות הסופית של כל אחד אחרי כל ההעברות, לא משנה מי שילם בפועל.</div>
+  </div>
+  <h2>מרכז ההתחשבנות</h2>
+  <div class="card">
+    <div class="seg" id="s-settle" style="margin-bottom:10px"><button data-s="hub" class="${(trip.meta.settle || 'hub') === 'hub' ? 'on' : ''}">כולם מעבירים למרכז</button><button data-s="direct" class="${trip.meta.settle === 'direct' ? 'on' : ''}">העברות ישירות</button></div>
+    <select class="in" id="hub">
+      <option value="">אוטומטי (מי שהכי בפלוס)</option>
+      ${trip.members.map(m => `<option value="${m.id}" ${trip.meta.hub===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}
+    </select>
+    <div class="note" style="margin-top:8px">${(trip.meta.settle || 'hub') === 'hub' ? 'כל מי שחייב מעביר רק למרכז, וכל מי שמגיע לו מקבל רק מהמרכז. כל אחד חוץ מהמרכז עושה פעולה אחת בלבד.' : 'כל מי שחייב מעביר לאדם אחד, ישירות למי שמגיע לו כשאפשר. פחות כסף עובר דרך המרכז, אבל יש יותר מקבלים.'}</div>
+  </div>
+  <h2>מאזן לפי חבר</h2>
+  <div class="card">
+    <table class="tbl"><tr><th>שם</th>${daysOn() ? `<th class="n">${U().many}</th>` : ''}<th class="n">שילם</th><th class="n">עלות סופית</th><th class="n">מאזן</th></tr>
+    ${trip.members.map(m => `<tr><td>${esc(m.name)}${m.id===me?' (אני)':''}</td>${daysOn() ? `<td class="n">${num(daysOf(m))}</td>` : ''}<td class="n">${fmt(C.paid[m.id], base)}</td><td class="n">${fmt(C.share[m.id], base)}</td>
+      <td class="n ${C.net[m.id]>0?'pos':C.net[m.id]<0?'neg':''}"><b>${C.net[m.id]>0?'+':''}${fmt(C.net[m.id], base)}</b></td></tr>`).join('')}
+    </table>
+    ${others ? `<div class="note" style="margin-top:10px">המרת מטבע: $1 = ${p.USD} ₪ · €1 = ${p.EUR} ₪${trip.meta.ratesDate ? ` (שער ${esc(trip.meta.ratesDate)})` : ''}. ניתן לשנות בהגדרות.</div>` : ''}
+  </div>`;
+}
+
+function viewSettings(C){
+  const p = trip.meta.ilsPer;
+  return `<h2>חברים בקבוצה</h2>
+  <div class="card">
+    ${trip.members.map(m => `<div class="mem"><div class="av" style="background:${color(m.id)}">${initial(m.name)}</div>
+      <div class="grow"><b>${esc(m.name)}</b>${m.id===me?'<span class="note">אני</span>':''}</div>
+      ${daysOn() ? `<button class="btn ghost sm" data-days="${m.id}">${fmtDays(daysOf(m))}</button>` : ''}
+      <button class="ibtn" data-ren="${m.id}" title="שינוי שם" aria-label="שינוי שם"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button>
+      ${trip.expenses.some(e => e.paidBy===m.id || (Array.isArray(e.split) && e.split.includes(m.id))) ? '<span style="width:36px;flex:none"></span>' : `<button class="ibtn del" data-rm="${m.id}" title="הסרה" aria-label="הסרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>`}
+    </div>`).join('')}
+    <div class="row" style="margin-top:12px"><input class="in grow" id="s-add" placeholder="הוספת חבר (למשל מי שאין לו סמארטפון)" maxlength="30"><button class="btn" id="s-add-go">הוספה</button></div>
+  </div>
+  <h2>אורך הטיול</h2>
+  <div class="card">
+    <div class="seg" id="s-unit" style="margin-bottom:10px"><button data-u="days" class="${trip.meta.unit !== 'nights' ? 'on' : ''}">ימים</button><button data-u="nights" class="${trip.meta.unit === 'nights' ? 'on' : ''}">לילות</button></div>
+    <div class="row"><input class="in grow" id="s-days" inputmode="decimal" placeholder="${trip.meta.unit === 'nights' ? 'למשל 2' : 'למשל 3'}" value="${trip.meta.tripDays ?? ''}"><button class="btn" id="s-days-go">שמירה</button></div>
+    <div class="note" style="margin-top:8px">${daysOn() ? `כל משתתף מעדכן ${U().q} היה (ליד השם שלו למעלה). הוצאות של "כולם" מתחלקות לפי החלק היחסי. מי שלא עדכן נחשב כאילו היה בכל הטיול.` : `השאירו ריק כדי לחלק שווה בשווה. מלאו את מספר ה${U().many} כדי לחלק לפי החלק של כל אחד.`}</div>
+  </div>
+  <h2>מטבע ההתחשבנות</h2>
+  <div class="card">
+    <div class="seg" id="s-base">${Object.keys(CUR).map(c => `<button data-c="${c}" class="${c===trip.meta.base?'on':''}">${CUR[c].sym} ${CUR[c].name}</button>`).join('')}</div>
+    <div class="note" style="margin-top:8px">כל הסכומים בהתחשבנות יוצגו במטבע הזה. הוצאות במטבע אחר יומרו לפי השערים למטה.</div>
+  </div>
+  <h2>שערי המרה</h2>
+  <div class="card">
+    ${!trip.meta.ratesAuto ? `<div class="warn">השערים לא נשלפו אוטומטית — בדקו ועדכנו.</div>` : ''}
+    <div class="rate"><span style="width:70px">$1 =</span><input class="in" id="r-usd" inputmode="decimal" value="${p.USD}"><span>₪</span></div>
+    <div class="rate"><span style="width:70px">€1 =</span><input class="in" id="r-eur" inputmode="decimal" value="${p.EUR}"><span>₪</span></div>
+    <div class="note">${trip.meta.ratesDate ? `שער יציג מ־${esc(trip.meta.ratesDate)}` : 'שער ידני'}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="r-save">שמירה</button><button class="btn ghost" id="r-fetch">שער של היום</button></div>
+  </div>
+  <h2>הקבוצה</h2>
+  <div class="card">
+    <label class="f" style="margin-top:0">שם הקבוצה</label>
+    <div class="row"><input class="in grow" id="s-name" value="${esc(trip.meta.name)}" maxlength="60"><button class="btn" id="s-name-go">שמירה</button></div>
+    <div class="share-line"><button class="btn ghost grow" id="s-copy">העתקת קישור</button><button class="btn ghost grow" id="s-switch">החלפת משתמש</button></div>
+    <div class="note" style="margin-top:12px">כל מי שיש לו את הקישור יכול לצפות ולערוך. שתפו רק עם החברים בקבוצה.</div>
+  </div>`;
+}
+
+function bindView(C){
+  app.querySelectorAll('[data-days]').forEach(b => b.onclick = () => openDays(b.dataset.days));
+  app.querySelectorAll('.exp').forEach(el => el.onclick = () => openExpense(trip.expenses.find(e => e.id === el.dataset.id)));
+  app.querySelectorAll('#s-settle button').forEach(b => b.onclick = () => { if ((trip.meta.settle || 'hub') !== b.dataset.s) act({action:'updateMeta', meta:{settle:b.dataset.s}}).catch(()=>{}); });
+  const hub = document.getElementById('hub');
+  if (hub) hub.onchange = () => act({action:'updateMeta', meta:{hub: hub.value || null}}).catch(()=>{});
+  const was = document.getElementById('wa-sum');
+  if (was) was.onclick = () => {
+    const base = trip.meta.base;
+    const lines = C.transfers.map(t => `• ${nameOf(t.from)} ← ${nameOf(t.to)}: ${fmtPlain(t.amt, base)}`);
+    const txt = `💸 סיכום "${trip.meta.name}"\nסה״כ הוצאות: ${fmtPlain(C.total, base)}\n\n${lines.join('\n')}\n\n${shareUrl()}`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+  };
+  if (tab !== 'set') return;
+  app.querySelectorAll('[data-ren]').forEach(b => b.onclick = () => openRename(b.dataset.ren));
+  app.querySelectorAll('#s-unit button').forEach(b => b.onclick = () => { if ((trip.meta.unit || 'days') !== b.dataset.u) act({action:'updateMeta', meta:{unit:b.dataset.u}}).catch(()=>{}); });
+  document.getElementById('s-days-go').onclick = (ev) => {
+    const v = document.getElementById('s-days').value.trim().replace(',', '.');
+    if (v && !(parseFloat(v) > 0)) return toast('מספר ימים לא תקין');
+    act({action:'updateMeta', meta:{tripDays: v ? parseFloat(v) : null}}, ev.target).then(() => toast(v ? 'חלוקה ' + U().by + ' הופעלה' : 'חלוקה שווה')).catch(()=>{});
+  };
+  app.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+    if (!b.dataset.sure){ b.dataset.sure = 1; b.classList.add('sure'); b.textContent = 'להסיר?'; return; }
+    act({action:'removeMember', id:b.dataset.rm}, b).then(() => { if (b.dataset.rm === me){ me = null; lsSet('sm_me_'+T, null); render(); } }).catch(()=>{});
+  });
+  document.getElementById('s-add-go').onclick = (ev) => {
+    const n = document.getElementById('s-add').value.trim(); if (!n) return toast('צריך שם');
+    act({action:'addMember', name:n}, ev.target).then(() => toast(`${n} נוסף/ה`)).catch(()=>{});
+  };
+  app.querySelectorAll('#s-base button').forEach(b => b.onclick = () => { if (b.dataset.c !== trip.meta.base) act({action:'updateMeta', meta:{base:b.dataset.c}}).catch(()=>{}); });
+  document.getElementById('r-save').onclick = (ev) => {
+    const usd = parseFloat(document.getElementById('r-usd').value.replace(',', '.')), eur = parseFloat(document.getElementById('r-eur').value.replace(',', '.'));
+    if (!(usd > 0 && eur > 0)) return toast('שער לא תקין');
+    act({action:'updateMeta', meta:{ilsPer:{USD:usd, EUR:eur}, ratesDate:null, ratesAuto:true}}, ev.target).then(() => toast('השערים נשמרו')).catch(()=>{});
+  };
+  document.getElementById('r-fetch').onclick = async (ev) => {
+    ev.target.disabled = true;
+    try {
+      const r = await fetch('/api/trip?rates=1', {cache:'no-store'}).then(x => x.json());
+      if (!r.ok) throw new Error('לא הצלחתי לשלוף שער — הזינו ידנית');
+      await act({action:'updateMeta', meta:{ilsPer:r.rates, ratesDate:r.date, ratesAuto:true}});
+      toast('עודכן לשער ' + r.date);
+    } catch(e){ toast(e.message); } finally { ev.target.disabled = false; }
+  };
+  document.getElementById('s-name-go').onclick = (ev) => act({action:'updateMeta', meta:{name: document.getElementById('s-name').value}}, ev.target).then(() => { rememberTrip(); toast('נשמר'); }).catch(()=>{});
+  document.getElementById('s-copy').onclick = () => copy(shareUrl());
+  document.getElementById('s-switch').onclick = () => { me = null; lsSet('sm_me_'+T, null); render(); };
+}
+
+async function copy(txt){ try { await navigator.clipboard.writeText(txt); toast('הקישור הועתק'); } catch(e){ prompt2(txt); } }
+function prompt2(txt){ openSheet(`<h2 style="margin-top:6px">העתיקו את הקישור</h2><input class="in" value="${esc(txt)}" readonly onclick="this.select()"><button class="btn block" style="margin-top:12px" data-close>סגירה</button>`); }
+
+// ---------- sheets ----------
+function openSheet(html, onBind){
+  sheetOpen = true;
+  sheetEl.innerHTML = `<div class="overlay"><div class="sheet"><div class="grab"></div>${html}</div></div>`;
+  const ov = sheetEl.querySelector('.overlay');
+  ov.onclick = e => { if (e.target === ov) closeSheet(); };
+  sheetEl.querySelectorAll('[data-close]').forEach(b => b.onclick = closeSheet);
+  if (onBind) onBind(sheetEl.querySelector('.sheet'));
+}
+function closeSheet(){ sheetOpen = false; sheetEl.innerHTML = ''; }
+
+function openInvite(fresh){
+  const url = shareUrl();
+  const txt = `הצטרפו לחלוקת ההוצאות של "${trip.meta.name}" 💸\nכל אחד מכניס מה ששילם, ובסוף כל אחד יודע למי להעביר:\n${url}`;
+  openSheet(`<h2 style="margin-top:6px">${fresh ? 'הקבוצה מוכנה! ' : ''}הזמנת חברים</h2>
+    <div class="sub">שלחו את הקישור לקבוצת הוואטסאפ. כל אחד נכנס, בוחר את השם שלו ומוסיף הוצאות.</div>
+    <a class="btn wa block" style="margin-top:16px" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">שליחה בוואטסאפ</a>
+    <button class="btn ghost block" style="margin-top:8px" id="inv-copy">העתקת קישור</button>
+    <div class="note" style="margin-top:10px;direction:ltr;text-align:center;word-break:break-all">${esc(url)}</div>
+    <button class="btn plain block" style="margin-top:6px" data-close>סגירה</button>`,
+    s => { s.querySelector('#inv-copy').onclick = () => copy(url); });
+}
+
+function openDays(id){
+  const m = trip.members.find(x => x.id === id); if (!m) return;
+  const total = trip.meta.tripDays, mine = id === me;
+  let val = daysOf(m);
+  const chips = [];
+  for (let d = 1; d <= Math.min(Math.ceil(total), 14); d++) chips.push(d);
+  openSheet(`<h2 style="margin-top:6px">${mine ? `${U().q} היית בטיול?` : `${U().q} ${esc(m.name)} היה/תה בטיול?`}</h2>
+    <div class="sub">הטיול: ${fmtDays(total)}. ההוצאות של "כולם" יתחלקו לפי החלק היחסי.</div>
+    <div class="chips" style="margin-top:14px">${chips.map(d => `<button class="chip" data-d="${d}">${d}</button>`).join('')}</div>
+    <label class="f">או מספר אחר${trip.meta.unit === 'nights' ? '' : ' (אפשר חצי יום, למשל 1.5)'}</label>
+    <input class="in amount-in" id="d-val" inputmode="decimal" value="${val}">
+    <button class="btn block" id="d-go" style="margin-top:14px">שמירה</button>
+    <button class="btn plain block" data-close style="margin-top:4px">ביטול</button>`,
+    s => {
+      const inp = s.querySelector('#d-val');
+      const paint = () => s.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', +c.dataset.d === parseFloat(inp.value)));
+      s.querySelectorAll('.chip').forEach(c => c.onclick = () => { inp.value = c.dataset.d; paint(); });
+      inp.oninput = paint; paint();
+      s.querySelector('#d-go').onclick = (ev) => {
+        const d = parseFloat(inp.value.replace(',', '.'));
+        if (!(d > 0)) return toast('מספר ימים לא תקין');
+        act({action:'setDays', id, days:d}, ev.target).then(() => { closeSheet(); toast('נשמר'); }).catch(()=>{});
+      };
+    });
+}
+
+function openRename(id){
+  const m = trip.members.find(x => x.id === id);
+  openSheet(`<h2 style="margin-top:6px">שינוי שם</h2><input class="in" id="rn" value="${esc(m.name)}" maxlength="30"><button class="btn block" id="rn-go" style="margin-top:12px">שמירה</button>`,
+    s => { s.querySelector('#rn-go').onclick = (ev) => act({action:'renameMember', id, name:s.querySelector('#rn').value}, ev.target).then(closeSheet).catch(()=>{}); });
+}
+
+function openExpense(e){
+  const isNew = !e;
+  const st = {
+    description: e?.description || '', amount: e ? String(e.amount) : '', currency: e?.currency || trip.meta.base,
+    paidBy: e?.paidBy || me, mode: !e || e.split === 'all' ? 'all' : 'some',
+    byDays: e ? usesDays(e) : true,
+    picked: new Set(e && e.split !== 'all' ? e.split : trip.members.map(m => m.id)),
+  };
+  if (!trip.members.find(m => m.id === st.paidBy)) st.paidBy = me;
+  const html = `<h2 style="margin-top:6px">${isNew ? 'הוצאה חדשה' : 'עריכת הוצאה'}</h2>
+    <label class="f" style="margin-top:4px">על מה?</label>
+    <input class="in" id="x-desc" placeholder="למשל: ארוחת ערב, דלק, צימר" maxlength="80" value="${esc(st.description)}">
+    <label class="f">כמה?</label>
+    <input class="in amount-in" id="x-amt" inputmode="decimal" placeholder="0" value="${esc(st.amount)}">
+    <div class="seg" id="x-cur" style="margin-top:8px">${Object.keys(CUR).map(c => `<button data-c="${c}">${CUR[c].sym} ${CUR[c].name}</button>`).join('')}</div>
+    <label class="f">מי שילם?</label>
+    <select class="in" id="x-paid">${trip.members.map(m => `<option value="${m.id}">${esc(m.name)}${m.id===me?' (אני)':''}</option>`).join('')}</select>
+    <label class="f">על מי מתחלק?</label>
+    <div class="seg" id="x-mode"><button data-m="all">כולם</button><button data-m="some">בחירת משתתפים</button></div>
+    <div id="x-chips" style="margin-top:10px"></div>
+    ${daysOn() ? `<label class="f">איך לחלק?</label><div class="seg" id="x-w"><button data-w="1">${U().label}</button><button data-w="0">שווה בשווה</button></div>` : ''}
+    <div class="preview" id="x-prev"></div>
+    <button class="btn block" id="x-save" style="margin-top:16px">${isNew ? 'הוספה' : 'שמירה'}</button>
+    ${isNew ? '' : `<button class="btn danger block" id="x-del" style="margin-top:8px">מחיקת ההוצאה</button>`}
+    <button class="btn plain block" data-close style="margin-top:4px">ביטול</button>`;
+  openSheet(html, s => {
+    const $ = q => s.querySelector(q);
+    $('#x-paid').value = st.paidBy;
+    const paint = () => {
+      s.querySelectorAll('#x-cur button').forEach(b => b.classList.toggle('on', b.dataset.c === st.currency));
+      s.querySelectorAll('#x-mode button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode));
+      s.querySelectorAll('#x-w button').forEach(b => b.classList.toggle('on', (b.dataset.w === '1') === st.byDays));
+      $('#x-chips').innerHTML = st.mode === 'all'
+        ? `<div class="note">מתחלק בין כל חברי הקבוצה — כולל מי שיצטרף בהמשך.</div>`
+        : `<div class="chips">${trip.members.map(m => `<button class="chip ${st.picked.has(m.id)?'on':''}" data-id="${m.id}">${esc(m.name)}</button>`).join('')}</div>`;
+      s.querySelectorAll('.chip').forEach(c => c.onclick = () => { st.picked.has(c.dataset.id) ? st.picked.delete(c.dataset.id) : st.picked.add(c.dataset.id); paint(); });
+      const amt = parseFloat(($('#x-amt').value || '').replace(',', '.'));
+      const n = st.mode === 'all' ? trip.members.length : trip.members.filter(m => st.picked.has(m.id)).length;
+      const ids = st.mode === 'all' ? trip.members.map(m => m.id) : trip.members.map(m => m.id).filter(id => st.picked.has(id));
+      if (amt > 0 && n && daysOn() && st.byDays){
+        const mm = memberMap(), sh = splitCents(Math.round(amt*100), ids.map(id => daysOf(mm[id])), 0);
+        $('#x-prev').innerHTML = ids.map((id,i) => `${esc(mm[id].name)} (${fmtDays(daysOf(mm[id]))}): ${fmtPlain(sh[i], st.currency)}`).join('<br>');
+      } else $('#x-prev').textContent = amt > 0 && n ? `${n} משתתפים · ${fmtPlain(Math.round(amt*100/n), st.currency)} לכל אחד` : (n ? `${n} משתתפים` : 'לא נבחרו משתתפים');
+    };
+    paint();
+    $('#x-amt').oninput = paint;
+    s.querySelectorAll('#x-cur button').forEach(b => b.onclick = () => { st.currency = b.dataset.c; paint(); });
+    s.querySelectorAll('#x-mode button').forEach(b => b.onclick = () => { st.mode = b.dataset.m; paint(); });
+    s.querySelectorAll('#x-w button').forEach(b => b.onclick = () => { st.byDays = b.dataset.w === '1'; paint(); });
+    if (isNew) setTimeout(() => $('#x-desc').focus(), 250);
+    $('#x-save').onclick = (ev) => {
+      const description = $('#x-desc').value.trim();
+      const amount = parseFloat(($('#x-amt').value || '').replace(',', '.'));
+      if (!description) return toast('על מה ההוצאה?');
+      if (!(amount > 0)) return toast('סכום לא תקין');
+      const split = st.mode === 'all' ? 'all' : trip.members.map(m => m.id).filter(id => st.picked.has(id));
+      if (split !== 'all' && !split.length) return toast('בחרו לפחות משתתף אחד');
+      act({action:'saveExpense', expense:{id:e?.id, description, amount, currency:st.currency, paidBy:$('#x-paid').value, split, byDays: daysOn() ? st.byDays : undefined}}, ev.target)
+        .then(() => { closeSheet(); toast(isNew ? 'ההוצאה נוספה' : 'נשמר'); }).catch(()=>{});
+    };
+    const del = $('#x-del');
+    if (del) del.onclick = () => {
+      if (!del.classList.contains('sure')){ del.classList.add('sure'); del.textContent = 'ללחוץ שוב למחיקה'; return; }
+      act({action:'deleteExpense', id:e.id}, del).then(() => { closeSheet(); toast('נמחק'); }).catch(()=>{});
+    };
+  });
+}
+
+// ---------- boot ----------
+async function refresh(){ try { const j = await api(); if (j.v && j.v !== APP_V) { location.reload(); return; } trip = j; if (!sheetOpen) render(); } catch(e){} }
+function startPolling(){
+  clearInterval(pollTimer);
+  pollTimer = setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 15000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+}
+async function boot(){
+  if (!T) return renderHome();
+  try { trip = await api(); }
+  catch(e){
+    app.innerHTML = `<div class="wrap"><div class="brand"><div class="logo">S</div>ספליט מקדאסי</div><div class="card" style="margin-top:30px;text-align:center"><b>${esc(e.message)}</b><div style="margin-top:14px"><a class="btn" href="${location.pathname}">יצירת קבוצה חדשה</a></div></div></div>`;
+    return;
+  }
+  me = lsGet('sm_me_'+T);
+  if (me && trip.members.find(m => m.id === me)) rememberTrip();
+  render(); startPolling();
+}
+boot();
+})();
+</script>
+</body>
+</html>

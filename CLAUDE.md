@@ -1,10 +1,12 @@
-# המשחקים של theyuker
+# הדברים של theyuker
 
-Personal games only. Work tools (Idan Lifts, cabin estimator etc.) never go here — they live in their own folders under `Desktop\Claude Code\` and belong in the boss's GitHub account/org.
+Personal games and personal apps only. Work tools (Idan Lifts, cabin estimator etc.) never go here — they live in their own folders under `Desktop\Claude Code\` and belong in the boss's GitHub account/org.
 
 ## Layout
-- One folder per game (`multiplication-game/`, `snakes-ladders/`, `penalty/`), each a self-contained `index.html` (no build step).
-- Root `index.html` is the games menu: every new game gets a card there, and a row in `README.md`.
+- Root `index.html` is "הדברים שלי": two sections, **🎮 משחקים** and **🧰 אפליקציות פרטיות**.
+- When the user asks to save something: a game goes in the משחקים section, any other personal tool goes in אפליקציות פרטיות. Each new item gets a card in the right section of `index.html` and a row in the matching table in `README.md`.
+- Games: one folder per game at the root (`multiplication-game/`, `snakes-ladders/`, `penalty/`, `english-vocab/`), each a self-contained `index.html` (no build step).
+- Apps: one folder per app under `apps/`. An app that needs a server (hosted elsewhere, e.g. Vercel) keeps its source in `apps/<name>/src/`, and `apps/<name>/index.html` only redirects to the live URL; its card links straight to the live URL.
 - UI language is Hebrew, `dir="rtl"`. Games must work on phones (Chrome on Android) as well as desktop.
 
 ## Publishing
@@ -16,6 +18,9 @@ Personal games only. Work tools (Idan Lifts, cabin estimator etc.) never go here
 ## Testing
 - Preview server: `.claude/launch.json` → `games` (python http.server on port 8770, serves this folder).
 - Voice games (Web Speech API) and phone controllers can't be fully tested in the preview pane — simulate the input, and tell the user what still needs a real device.
+
+## App notes
+- `apps/split-makdasi` (ספליט מקדאסי): runs on Vercel project `split-makdasi` (https://split-makdasi.vercel.app) with a Vercel Blob store; GitHub Pages cannot run it. Source of truth for code changes is `apps/split-makdasi/src/`; after changing it, redeploy to Vercel and bump `APP_V` in both `index.html` and `api/trip.js` (open pages auto-reload when it changes).
 
 ## Game notes
 - `multiplication-game`: voice answers in Hebrew (`he-IL`); the player picks operations (×, ÷, +, −, multi-select) and a number range 0–20; one high-score board per combination in localStorage (`board:<ops>:<lo>-<hi>`). Wrong / not-understood feedback waits 1.2 s (phones split answers into several final results); correct answers count at once. Player chips = only the last 4 names that started a round on this device (no fixed players; a one-time cleanup flagged `mult-players-v2` removed the old fixed "תומר").
