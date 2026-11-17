@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מי המותג? משחק סמלי רכב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1115; --panel:#181b22; --line:#2a2f3a; --txt:#eef1f6; --mut:#9aa3b2;
+  --acc:#ffb020; --ok:#2ecc71; --bad:#ff5a5f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Heebo,system-ui,sans-serif}
+body{min-height:100vh;display:flex;justify-content:center}
+.wrap{width:100%;max-width:560px;padding:18px 16px 40px}
+h1{font-size:28px;font-weight:800;margin:6px 0 2px;letter-spacing:-.5px}
+h1 span{color:var(--acc)}
+.sub{color:var(--mut);margin:0 0 20px;font-size:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.lbl{font-size:13px;color:var(--mut);margin-bottom:8px;font-weight:600}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:70px;background:#20242d;border:1px solid var(--line);color:var(--txt);padding:11px 8px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+.seg button small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+.seg button.on{background:var(--acc);border-color:var(--acc);color:#1a1300}
+.seg button.on small{color:#4a3600}
+.chk{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--acc)}
+.chk small{display:block;color:var(--mut);font-size:12px}
+.big{width:100%;background:var(--acc);color:#1a1300;border:0;border-radius:14px;padding:15px;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
+.big:active{transform:scale(.98)}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:11px 14px;font:inherit;font-weight:600;cursor:pointer}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:600}
+.hud .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px}
+.hud .pill b{color:var(--acc)}
+.bar{height:6px;background:#20242d;border-radius:9px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+.logo{background:#fff;border-radius:18px;height:240px;display:flex;align-items:center;justify-content:center;padding:26px;position:relative;overflow:hidden}
+.logo img{max-width:100%;max-height:100%;object-fit:contain;transition:transform .25s}
+.logo.ok{box-shadow:0 0 0 4px var(--ok) inset}
+.logo.bad{box-shadow:0 0 0 4px var(--bad) inset}
+.shake{animation:sh .35s}
+@keyframes sh{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.hint{min-height:28px;text-align:center;margin:12px 0 4px;font-size:20px;letter-spacing:3px;direction:ltr;font-family:ui-monospace,Menlo,monospace;color:var(--acc)}
+.row{display:flex;gap:8px;margin-top:8px}
+#ans{flex:1;background:#0b0d11;border:2px solid var(--line);border-radius:14px;color:var(--txt);font:inherit;font-size:20px;padding:12px 14px;outline:none;direction:ltr;text-align:left;min-width:0}
+#ans:focus{border-color:var(--acc)}
+#go{width:auto;padding:0 20px;font-size:17px}
+.mic{font-size:22px;padding:0 14px}
+.mic.on{background:var(--bad);border-color:var(--bad);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.msg{min-height:58px;text-align:center;margin-top:12px;font-size:17px;font-weight:600}
+.msg .nm{display:block;font-size:24px;font-weight:800;direction:ltr;margin-top:2px}
+.msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)} .msg.mid{color:var(--acc)}
+.tools{display:flex;gap:8px;justify-content:center;margin-top:6px}
+.tries{color:var(--mut);font-size:13px;text-align:center;margin-top:6px}
+.score{font-size:56px;font-weight:800;color:var(--acc);text-align:center;line-height:1;margin:10px 0 4px}
+.stats{display:flex;justify-content:space-around;text-align:center;margin:14px 0 6px}
+.stats div b{display:block;font-size:22px}
+.stats div{color:var(--mut);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px}
+.grid figure{margin:0;background:#fff;border-radius:12px;padding:8px 6px 6px;text-align:center}
+.grid img{width:100%;height:58px;object-fit:contain}
+.grid figcaption{color:#222;font-size:12px;font-weight:600;direction:ltr;margin-top:4px}
+.hide{display:none!important}
+.best{color:var(--mut);font-size:13px;text-align:center;margin-top:8px}
+.loading{color:var(--mut);text-align:center;padding:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>מי <span>המותג?</span></h1>
+  <p class="sub">רואים סמל של יצרן רכב, וכותבים את שם המותג. כותבים באנגלית או בעברית, גם שגיאות כתיב מתקבלות.</p>
+
+  <div id="loading" class="loading">טוען סמלים…</div>
+
+  <!-- START -->
+  <section id="start" class="hide">
+    <div class="card">
+      <div class="lbl">אילו מותגים</div>
+      <div class="seg" id="setSeg">
+        <button data-v="pop" class="on">מוכרים<small id="cPop"></small></button>
+        <button data-v="all">כל העולם<small id="cAll"></small></button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="lbl">רמת קושי</div>
+      <label class="chk"><input type="checkbox" id="txt"><span>לכלול סמלים שהשם כתוב בהם<small>כבוי: רק סמלים בלי שם כתוב (קשה יותר)</small></span></label>
+    </div>
+    <div class="card">
+      <div class="lbl">כמה שאלות</div>
+      <div class="seg" id="numSeg">
+        <button data-v="10" class="on">10</button>
+        <button data-v="20">20</button>
+        <button data-v="50">50</button>
+        <button data-v="0">הכול<small id="cNum"></small></button>
+      </div>
+    </div>
+    <button class="big" id="startBtn">יאללה, מתחילים</button>
+    <div class="best" id="bestLine"></div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hide">
+    <div class="hud">
+      <span class="pill">שאלה <b id="qn">1</b>/<span id="qt">10</span></span>
+      <span class="pill">רצף <b id="st">0</b></span>
+      <span class="pill">ניקוד <b id="sc">0</b></span>
+    </div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="logo" id="logoBox"><img id="logo" alt="סמל רכב"></div>
+    <div class="hint" id="hint"></div>
+    <form class="row" id="form" autocomplete="off">
+      <input id="ans" placeholder="שם המותג…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+      <button class="ghost mic hide" id="micBtn" type="button" title="להגיד את המותג" aria-label="להגיד את המותג">🎤</button>
+      <button class="big" id="go" type="submit">בדוק</button>
+    </form>
+    <div class="tries" id="tries"></div>
+    <div class="tries" id="micHint"></div>
+    <div class="msg" id="msg"></div>
+    <div class="tools">
+      <button class="ghost" id="hintBtn" type="button">💡 רמז</button>
+      <button class="ghost" id="skipBtn" type="button">דלג ←</button>
+      <button class="ghost hide" id="nextBtn" type="button">הבא ←</button>
+      <button class="ghost" id="quitBtn" type="button">סיום</button>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="hide">
+    <div class="card" style="text-align:center">
+      <div class="lbl">הניקוד שלך</div>
+      <div class="score" id="fScore">0</div>
+      <div class="best" id="fBest"></div>
+      <div class="stats">
+        <div><b id="fOk">0</b>זוהו</div>
+        <div><b id="fBad">0</b>פספוסים</div>
+        <div><b id="fStreak">0</b>רצף שיא</div>
+      </div>
+    </div>
+    <div class="card" id="missCard">
+      <div class="lbl">כדאי לזכור את אלה</div>
+      <div class="grid" id="missGrid"></div>
+    </div>
+    <div class="row">
+      <button class="big" id="againBtn">עוד סיבוב</button>
+      <button class="ghost" id="menuBtn">הגדרות</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+let DATA=[], cfg={set:'pop',txt:false,num:10}, Q=[], qi=0, score=0, streak=0, bestStreak=0, okCount=0, misses=[], cur=null, hints=0, tries=0, locked=false, timer=null, quit=false;
+const MAX_TRIES=3;
+
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+// Brand-name matcher: Hebrew / English / misspellings.
+const HEB=/[א-ת]/;
+function clean(s){
+  return s.normalize('NFD').replace(/[̀-֑ͯ-ׇ]/g,'').toLowerCase()
+    .replace(/&/g,'and').replace(/[^a-z0-9א-ת]/g,'');
+}
+function osa(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  const d=[];for(let i=0;i<=m;i++){d[i]=[i];}for(let j=0;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){
+    const c=a[i-1]===b[j-1]?0:1;
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+    if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1);
+  }
+  return d[m][n];
+}
+function skelLatin(s){
+  s=s.replace(/sch/g,'S').replace(/chr/g,'kr').replace(/ch$/g,'k').replace(/ch/g,'S').replace(/sh/g,'S')
+     .replace(/ph/g,'f').replace(/th/g,'t').replace(/gh/g,'g').replace(/ck/g,'k').replace(/qu/g,'k')
+     .replace(/x/g,'ks').replace(/t[sz]/g,'S').replace(/c(?=[eiy])/g,'s').replace(/c/g,'k').replace(/j/g,'g');
+  let o='';
+  for(const ch of s){
+    if('wvfpb'.includes(ch)) o+='B'; else if('zsS'.includes(ch)) o+='S'; else if('kq'.includes(ch)) o+='K';
+    else if('aeiouyh'.includes(ch)) continue; else o+=ch.toUpperCase();
+  }
+  return o;
+}
+function skelHeb(s){
+  let o='';
+  const map={'ב':'B','ג':'G','ד':'D','ז':'S','ח':'K','ט':'T','כ':'K','ך':'K','ל':'L','מ':'M','ם':'M','נ':'N','ן':'N','ס':'S','פ':'B','ף':'B','צ':'S','ץ':'S','ק':'K','ר':'R','ש':'S','ת':'T'};
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(c==='ו'){ if(s[i+1]==='ו'){o+='B';i++;} else if(i===0) o+='B'; continue; }
+    if(map[c]) o+=map[c]; else if(/[0-9]/.test(c)) o+=c;
+  }
+  return o;
+}
+function skel(s){ s=clean(s); const h=s.replace(/[a-z]/g,''), l=s.replace(/[א-ת]/g,''); return (skelLatin(l)+skelHeb(h)).replace(/(.)\1+/g,'$1'); }
+function prep(items){
+  for(const it of items){
+    it._k=[it.n,...it.a].map(k=>{const c=clean(k);return c?{c,h:HEB.test(c),s:skel(k)}:null}).filter(Boolean);
+  }
+}
+function tol(L){ return L<=3?0.5:L<=5?1.5:L<=8?2:3; }
+function costOf(inp,it){
+  let cost=99, margin=99;
+  for(const k of it._k){
+    let c=99;
+    if(inp.h===k.h) c=osa(inp.c,k.c);
+    if(inp.s && k.s) c=Math.min(c, osa(inp.s,k.s)+0.5);
+    cost=Math.min(cost,c); margin=Math.min(margin,c-tol(k.c.length));
+  }
+  return {cost,margin};
+}
+// returns 'ok' | 'close' | 'bad' | 'empty'
+function judge(input,target,all){
+  const c=clean(input); if(!c) return 'empty';
+  const inp={c,h:HEB.test(c),s:skel(input)};
+  const t=costOf(inp,target);
+  let others=99;
+  for(const it of all){ if(it===target) continue; const o=costOf(inp,it).cost; if(o<others) others=o; }
+  if(t.margin<=0 && t.cost<=others) return 'ok';
+  if(t.margin<=1.5 && t.cost<=others+0.5) return 'close';
+  return 'bad';
+}
+
+
+function judgeAny(text){
+  // try the whole answer, then every 1-3 word span (spoken answers like "זה טויוטה")
+  const order={ok:3,close:2,bad:1,empty:0};
+  let best=judge(text,cur,DATA);
+  const w=text.trim().split(/[\s,.!?;:]+/).filter(Boolean);
+  if(w.length>1&&best!=='ok'){
+    for(let i=0;i<w.length;i++)for(let n=1;n<=3&&i+n<=w.length;n++){
+      const r=judge(w.slice(i,i+n).join(' '),cur,DATA);
+      if(order[r]>order[best]) best=r;
+      if(best==='ok') return best;
+    }
+  }
+  return best;
+}
+function pool(){
+  return DATA.filter(x=>(cfg.set==='all'||x.p) && (cfg.txt||x.c));
+}
+function updCounts(){
+  const pc=DATA.filter(x=>x.p&&(cfg.txt||x.c)).length, ac=DATA.filter(x=>cfg.txt||x.c).length;
+  $('cPop').textContent=pc+' סמלים'; $('cAll').textContent=ac+' סמלים';
+  $('cNum').textContent=pool().length;
+  const b=store.get(key()); $('bestLine').textContent=b?('שיא במצב הזה: '+b):'';
+}
+function key(){return 'carlogo-best-'+cfg.set+'-'+(cfg.txt?1:0)+'-'+cfg.num}
+function seg(id,prop,cast){
+  $(id).addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    [...$(id).children].forEach(x=>x.classList.toggle('on',x===b));
+    cfg[prop]=cast(b.dataset.v); updCounts();
+  });
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function show(id){['start','game','end','loading'].forEach(s=>$(s).classList.toggle('hide',s!==id));}
+
+function startGame(){
+  const p=shuffle(pool().slice());
+  Q=cfg.num?p.slice(0,cfg.num):p;
+  quit=false;qi=0;score=0;streak=0;bestStreak=0;okCount=0;misses=[];
+  $('qt').textContent=Q.length;
+  show('game'); next();
+}
+function next(){
+  clearTimeout(timer);
+  if(qi>=Q.length) return finish();
+  cur=Q[qi]; hints=0; tries=0; locked=false;
+  $('logo').src=cur.img;
+  $('logoBox').className='logo';
+  $('hint').textContent=''; $('msg').textContent=''; $('msg').className='msg'; $('tries').textContent='';
+  $('ans').value=''; $('ans').disabled=false; $('go').disabled=false;
+  $('hintBtn').classList.remove('hide'); $('skipBtn').classList.remove('hide'); $('nextBtn').classList.add('hide');
+  $('qn').textContent=qi+1; $('sc').textContent=score; $('st').textContent=streak;
+  $('prog').style.width=(qi/Q.length*100)+'%';
+  setTimeout(()=>$('ans').focus(),50);
+}
+function hintText(){
+  const n=cur.n; let shown=0;
+  if(hints===1) shown=0; else if(hints===2) shown=1; else shown=Math.ceil(n.replace(/[^A-Za-z0-9À-ž]/g,'').length/2);
+  let k=0, out='';
+  for(const ch of n){
+    if(/[A-Za-z0-9À-ž]/.test(ch)){ out+=(k<shown?ch.toUpperCase():'_')+' '; k++; }
+    else if(ch===' ') out+='  ';
+    else out+=ch+' ';
+  }
+  return out.trim();
+}
+function doHint(){
+  if(locked||hints>=3) return;
+  hints++; $('hint').textContent=hintText();
+  if(hints>=3) $('hintBtn').classList.add('hide');
+  $('ans').focus();
+}
+function resolve(win,label){
+  locked=true; $('ans').disabled=true; $('go').disabled=true;
+  $('hintBtn').classList.add('hide'); $('skipBtn').classList.add('hide'); $('nextBtn').classList.remove('hide');
+  const m=$('msg');
+  if(win){
+    const pts=Math.max(2,10-hints*3-tries*2);
+    score+=pts; streak++; okCount++; bestStreak=Math.max(bestStreak,streak);
+    m.className='msg ok'; m.innerHTML=(label||'נכון!')+' +'+pts+'<span class="nm"></span>';
+    $('logoBox').className='logo ok';
+  }else{
+    streak=0; misses.push(cur);
+    m.className='msg bad'; m.innerHTML=(label||'התשובה:')+'<span class="nm"></span>';
+    $('logoBox').className='logo bad';
+  }
+  m.querySelector('.nm').textContent=cur.n;
+  $('sc').textContent=score; $('st').textContent=streak;
+  qi++;
+  timer=setTimeout(next, win?1400:2600);
+}
+function submit(e){
+  e.preventDefault(); if(locked) return;
+  const v=$('ans').value, r=judgeAny(v);
+  if(r==='empty') return;
+  if(r==='ok') return resolve(true, clean(v)===clean(cur.n)?'נכון!':'נכון! השם המדויק:');
+  tries++;
+  const box=$('logoBox'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+  if(tries>=MAX_TRIES) return resolve(false,'לא הפעם. זה:');
+  const m=$('msg');
+  if(r==='close'){m.className='msg mid'; m.textContent='קרוב מאוד! בדוק את האיות';}
+  else {m.className='msg bad'; m.textContent='לא נכון, נסה שוב';}
+  $('tries').textContent='נשארו '+(MAX_TRIES-tries)+' ניסיונות';
+  $('ans').select();
+}
+function finish(){
+  clearTimeout(timer);
+  $('prog').style.width='100%';
+  $('fScore').textContent=score; $('fOk').textContent=okCount; $('fBad').textContent=misses.length; $('fStreak').textContent=bestStreak;
+  const k=key(), prev=+(store.get(k)||0);
+  if(score>prev && !quit){store.set(k,score); $('fBest').textContent=prev?'שיא חדש! (קודם: '+prev+')':'';}
+  else $('fBest').textContent=prev?'השיא שלך: '+prev:'';
+  const g=$('missGrid'); g.innerHTML='';
+  misses.forEach(x=>{const f=document.createElement('figure');const i=new Image();i.src=x.img;i.alt='';const c=document.createElement('figcaption');c.textContent=x.n;f.append(i,c);g.append(f);});
+  $('missCard').classList.toggle('hide',!misses.length);
+  show('end');
+}
+
+seg('setSeg','set',String); seg('numSeg','num',Number);
+$('txt').addEventListener('change',e=>{cfg.txt=e.target.checked;updCounts();});
+$('startBtn').onclick=startGame; $('againBtn').onclick=startGame;
+$('menuBtn').onclick=()=>{updCounts();show('start');};
+$('form').addEventListener('submit',submit);
+$('hintBtn').onclick=doHint;
+$('skipBtn').onclick=()=>{if(!locked) resolve(false,'דילגת. זה:');};
+$('nextBtn').onclick=next;
+$('quitBtn').onclick=()=>{ quit=true; Q=Q.slice(0,qi); finish(); };
+document.addEventListener('keydown',e=>{ if(e.key==='Enter' && locked && !$('game').classList.contains('hide')){ e.preventDefault(); next(); }});
+
+// ---- voice: platform dictation (desktop Chrome / Claude desktop app) ----
+let dict=null, listening=false;
+function autoSubmit(){ if(!locked && $('ans').value.trim()) $('form').requestSubmit(); }
+if(window.claude && window.claude.use){
+  window.claude.use('dictation').then(d=>{
+    if(!d) return; dict=d;
+    $('micBtn').classList.remove('hide');
+    d.onPartial(({text})=>{ if(!locked && text) $('ans').value=text.trim(); });
+    d.onFinal(({text})=>{
+      if(locked) return;
+      $('ans').value=text.trim();
+      autoSubmit();
+    });
+    d.onState(({state,reason})=>{
+      listening=state!=='idle';
+      $('micBtn').classList.toggle('on',listening);
+      $('micHint').textContent=listening?'מקשיב… פשוט תגיד את שם המותג':'';
+      if(state==='idle'&&(reason==='not_granted'||reason==='unavailable')){ $('micBtn').classList.add('hide'); $('micHint').textContent='אין גישה למיקרופון, אפשר להקליד'; }
+    });
+  }).catch(()=>{});
+}
+// ---- fallback: browser speech recognition (Chrome / Edge, incl. Android) ----
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null, srOn=false;
+function setMic(on,msg){ $('micBtn').classList.toggle('on',on); $('micHint').textContent=msg||''; }
+if(SR){ setTimeout(()=>{ if(!dict) $('micBtn').classList.remove('hide'); },0); }
+function srStart(){
+  rec=new SR(); rec.lang='he-IL'; rec.interimResults=true; rec.maxAlternatives=5; rec.continuous=false;
+  rec.onresult=e=>{
+    const r=e.results[e.results.length-1];
+    if(locked) return;
+    if(!r.isFinal){ $('ans').value=r[0].transcript.trim(); return; }
+    const alts=[...r].map(x=>x.transcript.trim()).filter(Boolean);
+    let pick=alts.find(t=>judgeAny(t)==='ok')||alts[0];
+    if(pick){ $('ans').value=pick; autoSubmit(); }
+  };
+  rec.onerror=e=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed'){ srOn=false; setMic(false,'אין גישה למיקרופון, אפשר להקליד'); } };
+  rec.onend=()=>{ if(srOn) setTimeout(()=>{ if(srOn) try{srStart();}catch(_){} },150); else setMic(false); };
+  rec.start(); setMic(true,'מקשיב… פשוט תגיד את שם המותג');
+}
+$('micBtn').onclick=()=>{
+  if(!dict && SR){
+    if(srOn){ srOn=false; try{rec.stop();}catch(_){} setMic(false); return; }
+    srOn=true; try{srStart();}catch(_){ srOn=false; setMic(false); }
+    return;
+  }
+  if(!dict) return;
+  if(listening){ dict.stop().catch(()=>{}); return; }
+  dict.start().catch(e=>{
+    const c=e&&e.code;
+    if(c==='not_granted'||c==='unavailable'){ $('micBtn').classList.add('hide'); $('micHint').textContent='אין גישה למיקרופון, אפשר להקליד'; }
+    else if(c==='rate_limited') $('micHint').textContent='המיקרופון עמוס, נסה שוב עוד רגע';
+  });
+};
+// ---- keyboard dictation (phone keyboard mic): a burst of several characters at once = spoken text ----
+let dictTimer=null;
+$('ans').addEventListener('input',e=>{
+  clearTimeout(dictTimer);
+  const t=e.inputType||'', burst=(e.data&&e.data.length>=3)||t==='insertReplacementText'||t==='insertFromDictation';
+  if(burst) dictTimer=setTimeout(autoSubmit,900);
+});
+fetch('logos.json').then(r=>r.json()).then(d=>{DATA=d; prep(DATA); updCounts(); show('start');})
+  .catch(()=>{$('loading').textContent='לא הצלחתי לטעון את הסמלים.';});
+})();
+</script>
+</body>
+</html>
